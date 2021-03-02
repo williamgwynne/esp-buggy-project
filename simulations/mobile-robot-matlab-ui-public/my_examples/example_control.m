@@ -26,6 +26,7 @@ if my_alg('is_first_time')
     % Initialise wheel angular velocity contollers
     my_alg('wR_set') = 7;
     my_alg('wL_set') = 6;
+    my_alg('wL_set') = 7;
     
     my_alg('control_right') = MotorControl();
     my_alg('control_left') = MotorControl();
