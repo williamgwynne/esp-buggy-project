@@ -71,19 +71,19 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
    end
 
 else
-%     %% Finish algorithm and plot results
-%     
-%     % Stop motors
-%     my_alg('right motor') = 0;
-%     my_alg('left motor') = 0;
-%     % Stop session
-%     my_alg('is_done') = true;
-%     
-%     % Plot saved velocities for right and left wheel
-%     figure(2);
-%     plot(my_alg('wR_all'));
-%     hold on
-%     plot(my_alg('wL_all'));
+    %% Finish algorithm and plot results
+    
+    % Stop motors
+    my_alg('right motor') = 0;
+    my_alg('left motor') = 0;
+    % Stop session
+    my_alg('is_done') = true;
+    
+    % Plot saved velocities for right and left wheel
+    figure(2);
+    plot(my_alg('wR_all'));
+    hold on
+    plot(my_alg('wL_all'));
 
 end
 
