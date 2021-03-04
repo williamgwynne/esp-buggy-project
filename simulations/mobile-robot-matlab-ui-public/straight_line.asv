@@ -68,7 +68,7 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         % Left wheel controller %%%%%%%%%%%%%%%%%%%%%
         %uL = my_alg('control_left').Control(my_alg('wL_set'),my_alg('left encoder'),dt);
         syms errorspeedright = speedleft - speedleft_measured;
-        uL = errorspeedleft * kp_speed + ki_speed * errorspeedleft_sum + kd_speed * (errorspeedleft-errorspeedleft_prev);
+        uL = errorspeedleft * kp_speed + ki_speed * errorspeedright_sum + kd_speed * (errorspeedright-errorspeedright_prev);
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Apply pwm signal
