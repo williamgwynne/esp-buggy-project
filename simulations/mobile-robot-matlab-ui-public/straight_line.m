@@ -64,10 +64,13 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         %% Add your loop code here (replace with your controller)%%%%%%%%%
         % Right wheel controller %%%%%%%%%%%%%%%%%%%%
         uR = my_alg('control_right').Control(my_alg('wR_set'),my_alg('right encoder'),dt);
-        errorspeedright = speedright - my_alg('right encoder');       
+        %errorspeedright = speedright - my_alg('right encoder');       
         %uR = errorspeedright * kp_speed + ki_speed * errorspeedright_sum + kd_speed * (errorspeedright-errorspeedright_prev);
         %errorspeedright_sum = errorspeedright + errorspeedright_sum;
         %errorspeedright_prev = errorspeedright;
+        
+        
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Left wheel controller %%%%%%%%%%%%%%%%%%%%%
