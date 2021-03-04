@@ -1,4 +1,4 @@
-function my_alg = example_control(my_alg, robot)
+function my_alg = straight_line(my_alg, robot)
 % This function implements velocity controllers for both wheels 
 % and applies the desired setpoints for a specified amount of time.
 %
@@ -24,8 +24,8 @@ if my_alg('is_first_time')
     my_alg('dc_motor_signal_mode') = 'voltage_pwm';     % change if necessary to 'omega_setpoint'
     
     % Initialise wheel angular velocity contollers
-    syms speedright = 7;
-    syms speedleft = 7;
+    speedright = 7;
+    speedleft = 7;
     
     my_alg('wR_set') = speedright;
     my_alg('wL_set') = speedleft;
@@ -46,8 +46,13 @@ end
 %% Loop code runs here
 
 time = toc(my_alg('tic'));      % Get time since start of session
-syms errorspeedright_sum = 0;
-syms errorspeedright_prev = 0;
+errorspeedright_sum = 0;
+errorspeedright_prev = 0;
+errorspeedleft_sum = 0;
+errorspeedleft_prev = 0;
+kp_speed = 1;
+kd_speed = 1;
+ki_speed = 1;
 
 if time < my_alg('t_finish')    % Check for algorithm finish time
     
@@ -58,17 +63,19 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
 
         %% Add your loop code here (replace with your controller)%%%%%%%%%
         % Right wheel controller %%%%%%%%%%%%%%%%%%%%
-        %uR = my_alg('control_right').Control(my_alg('wR_set'),my_alg('right encoder'),dt);
-        syms errorspeedright = speedright - speedright_measured;       
-        uR = errorspeedright * kp_speed + ki_speed * errorspeedright_sum + kd_speed * (errorspeedright-errorspeedright_prev);
-        errorspeedright_sum += errorspeedright;
-        errorspeedright_prev = errorspeedright;
+        uR = my_alg('control_right').Control(my_alg('wR_set'),my_alg('right encoder'),dt);
+        errorspeedright = speedright - my_alg('right encoder');       
+        %uR = errorspeedright * kp_speed + ki_speed * errorspeedright_sum + kd_speed * (errorspeedright-errorspeedright_prev);
+        %errorspeedright_sum = errorspeedright + errorspeedright_sum;
+        %errorspeedright_prev = errorspeedright;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Left wheel controller %%%%%%%%%%%%%%%%%%%%%
-        %uL = my_alg('control_left').Control(my_alg('wL_set'),my_alg('left encoder'),dt);
-        syms errorspeedright = speedleft - speedleft_measured;
-        uL = errorspeedleft * kp_speed + ki_speed * errorspeedleft_sum + kd_speed * (errorspeedleft-errorspeedleft_prev);
+        uL = my_alg('control_left').Control(my_alg('wL_set'),my_alg('left encoder'),dt);
+        %errorspeedleft = speedleft - my_alg('left encoder');       
+        %uL = errorspeedleft * kp_speed + ki_speed * errorspeedleft_sum + kd_speed * (errorspeedleft-errorspeedleft_prev);
+        %errorspeedleft_sum = errorspeedleft + errorspeedleft_sum;
+        %errorspeedleft_prev = errorspeedleft;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Apply pwm signal
