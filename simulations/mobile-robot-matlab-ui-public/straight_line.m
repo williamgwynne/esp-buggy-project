@@ -42,6 +42,15 @@ if my_alg('is_first_time')
     %initialise kinematic variables
     my_alg('distance') = 0;
     my_alg('total_phi') = 0;
+    
+    %initialising PID variables
+    my_alg('errorspeedright_prev')=0;
+    my_alg('errorspeedleft_prev')=0;
+    my_alg('errorspeedright_sum')=0;
+    my_alg('errorspeedleft_sum')=0;
+    my_alg('kp_speed')=1;
+    my_alg('ki_speed')=0;
+    my_alg('kd_speed')=0;
 end
 
 %% Loop code runs here
@@ -71,8 +80,10 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         %% Add your loop code here (replace with your controller)%%%%%%%%%
         % Right wheel controller %%%%%%%%%%%%%%%%%%%%
         %uR = my_alg('control_right').Control(my_alg('wR_set'),my_alg('right encoder'),dt);
-        uR_error = my_alg('wR_set')-my_alg('right encoder')
-        uR = my_alg('wR_set')-uR_error
+        errorspeedright = my_alg('wR_set')-my_alg('right encoder')
+        uR = (errorspeedright * my_alg('kp_speed') + my_alg('ki_speed') * my_alg('errorspeedright_sum') + my_alg('kd_speed') * (errorspeedright-my_alg('errorspeedright_prev')))*my_alg('w2p_ratio');
+        my_alg('errorspeedright_sum') = errorspeedright+my_alg('errorspeedright_sum');
+        my_alg('errorspeedright_prev') = errorspeedright;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Left wheel controller %%%%%%%%%%%%%%%%%%%%%

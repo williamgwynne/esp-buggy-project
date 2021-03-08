@@ -40,8 +40,8 @@ if my_alg('is_first_time')
     my_alg('t_finish') = 2;
     
     %initialise kinematic variables
-    distance = 0;
-    total_phi = 0;
+    my_alg('distance') = 0;
+    my_alg('total_phi') = 0;
 end
 
 %% Loop code runs here
@@ -60,19 +60,28 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
 
         averageVelocity = (linearVelocity_left + linearVelocity_right)/2
 
-        distance = (averageVelocity*dt) + distance
+        my_alg('distance') = (averageVelocity*dt) + my_alg('distance');
+        distance = my_alg('distance')
 
         phi = (linearVelocity_left - linearVelocity_right)*dt / 0.18 %angle is clockwise
 
-        total_phi = phi + total_phi
+        my_alg('total_phi') = phi + my_alg('total_phi');
+        totalphi=my_alg('total_phi')
         
         %% Add your loop code here (replace with your controller)%%%%%%%%%
         % Right wheel controller %%%%%%%%%%%%%%%%%%%%
-        uR = my_alg('control_right').Control(my_alg('wR_set'),my_alg('right encoder'),dt);
+        %uR = my_alg('control_right').Control(my_alg('wR_set'),my_alg('right encoder'),dt);
+        errorspeedright = my_alg('wR_set')-my_alg('right encoder')
+        uR = errorspeedright * my_alg('kp_speed') + my_alg('ki_speed') * my_alg('errorspeedright_sum') + my_alg('kd_speed') * (errorspeedright-my_alg('errorspeedright_prev'));
+        my_alg('errorspeedright_sum') = errorspeedright+my_alg('errorspeedright_sum');
+        my_alg('errorspeedright_prev') = errorspeedright;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Left wheel controller %%%%%%%%%%%%%%%%%%%%%
-        uL = my_alg('control_left').Control(my_alg('wL_set'),my_alg('left encoder'),dt);
+        %uL = my_alg('control_left').Control(my_alg('wL_set'),my_alg('left encoder'),dt);
+
+        uL_error = my_alg('wL_set')-my_alg('left encoder')
+        uL = my_alg('wL_set')-uL_error
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Apply pwm signal
