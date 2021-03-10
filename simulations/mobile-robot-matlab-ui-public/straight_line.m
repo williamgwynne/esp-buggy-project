@@ -57,8 +57,8 @@ if my_alg('is_first_time')
     my_alg('kd_speed')=0.012;%differential coefficient
     
     %PID coefficients for line-speed control
-    my_alg('kp_distance') = 5 %20 %36;
-    my_alg('ki_distance') = 1 %100 %0.5 %600;
+    my_alg('kp_distance') = 0.01 %20 %36;
+    my_alg('ki_distance') = 0 %100 %0.5 %600;
     my_alg('kd_distance') = 0 %20 %4 %0.45;
     my_alg('errordistance_sum') = 0;
     my_alg('errordistance_prev') = 0;
@@ -89,14 +89,14 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         my_alg('distance') = (averageVelocity*dt) + my_alg('distance');
         
         %speed adjustments
-        errordistance = 3 - my_alg('distance'); %3 metres is set distance for straight line
+        errordistance = 0.05 - my_alg('distance'); %3 metres is set distance for straight line
         my_alg('errordistance_sum') = my_alg('errordistance_sum') + errordistance;
 %           if (my_alg('errordistance_sum')>1.5)
 %               my_alg('errordistance_sum')=1.5;
 %           elseif (my_alg('errordistance_sum')<-1.5)
 %               my_alg('errordistance_sum')=-1.5;
 %           end
-        forwardspeed = 0 + (errordistance * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (errordistance-my_alg('errordistance_prev'))/dt); %0 is steady state speed
+        forwardspeed = (0 + (errordistance * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (errordistance-my_alg('errordistance_prev'))/dt))/dt; %0 is steady state speed
         
 %            if (forwardspeed>14)
 %                forwardspeed = 14;
@@ -120,8 +120,8 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
 %         adjustmentangle = my_alg('pi')/2 + (angleerror * my_alg('kp_angle') + my_alg('ki_angle') * my_alg('angleerror_sum')*dt + my_alg('kd_angle') * (angleerror-my_alg('angleerror_prev'))/dt)
 %         my_alg('angleerror_prev')=angleerror;
         
-        my_alg('wR_set') = forwardspeed; %-0.09*adjustmentangle)/0.05; %converting to angular speed
-        my_alg('wL_set') = forwardspeed; %+0.09*adjustmentangle)/0.05; 
+        my_alg('wR_set') = forwardspeed/0.05; %-0.09*adjustmentangle)/0.05; %converting to angular speed
+        my_alg('wL_set') = forwardspeed/0.05; %+0.09*adjustmentangle)/0.05; 
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
@@ -144,7 +144,7 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         my_alg('left motor') = uL;
 
         % Save data for ploting
-        my_alg('wR_all') = [my_alg('wR_all') my_alg('right encoder')];
+        my_alg('wR_all') = [my_alg('wR_all') errordistance];
         my_alg('wL_all') = [my_alg('wL_all') my_alg('right encoder')];
         my_alg('distance_all') = [my_alg('distance_all') my_alg('distance')];
         %% End %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -165,9 +165,9 @@ else
       hold on
       %plot(my_alg('wL_all'));
 
-      figure(3);
-      plot(my_alg('distance_all'));
-      hold on
+%       figure(3);
+%       plot(my_alg('distance_all'));
+%       hold on
 end
 
 return
