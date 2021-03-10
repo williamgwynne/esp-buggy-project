@@ -22,6 +22,7 @@ if my_alg('is_first_time')
     %% Setup initial parameters here
     
     my_alg('dc_motor_signal_mode') = 'voltage_pwm';     % change if necessary to 'omega_setpoint'
+    my_alg('pi') = 3.1415926;
     
     % Initialise wheel angular velocity contollers
     my_alg('wR_set') = 0;
@@ -60,7 +61,16 @@ if my_alg('is_first_time')
     my_alg('kd_distance') = 20 %4 %0.45;
     my_alg('errordistance_sum') = 0;
     my_alg('errordistance_prev') = 0;
-    my_alg('theta') = 0;
+    
+    %PID coefficients for angle control
+    my_alg('angleerror_sum') = 0;
+    my_alg('angleerror_prev') = 0;
+    my_alg('kp_angle') = 0;
+    my_alg('ki_angle') = 0;
+    my_alg('kd_angle') = 0;
+    
+%     my_alg('theta') = 0;
+    my_alg('phi') = 0;
 end
 
 %% Loop code runs here
@@ -87,7 +97,7 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
 %           elseif (my_alg('errordistance_sum')<-1.5)
 %               my_alg('errordistance_sum')=-1.5;
 %           end
-        forwardspeed = 0 + (errordistance * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (errordistance-my_alg('errordistance_prev'))/dt)/dt;
+        forwardspeed = 7 %0 + (errordistance * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (errordistance-my_alg('errordistance_prev'))/dt)/dt;
         
 %            if (forwardspeed>14)
 %                forwardspeed = 14;
@@ -98,12 +108,24 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         %angle adjustments
-        difftheta = (linearVelocity_left - linearVelocity_right) / 0.18; %angle is clockwise, theta is angle error
-        my_alg('theta') = difftheta*dt + my_alg('theta');
+%         difftheta = (linearVelocity_left - linearVelocity_right) / 0.18; %angle is clockwise, theta is angle error
+%         my_alg('theta') = difftheta*dt + my_alg('theta');
         
-        phi=0;
-        my_alg('wR_set') = (forwardspeed-0.09*phi)/0.05; %converting to angular speed
-        my_alg('wL_set') = (forwardspeed+0.09*phi)/0.05; 
+        diffphi=(linearVelocity_right-linearVelocity_left)/0.18
+        my_alg('phi') = diffphi*dt + my_alg('phi');
+        
+        
+        h=averageVelocity*dt
+%         x=h*sin(my_alg('phi'))
+        y=h*cos(my_alg('phi'))
+        
+        angleerror = my_alg('pi')/2 - my_alg('phi');
+        my_alg('angleerror_sum') = my_alg('phi') + my_alg('phi_sum');
+        adjustmentangle = my_alg('pi')/2 + (angleerror * my_alg('kp_angle') + my_alg('ki_angle') * my_alg('angleerror_sum')*dt + my_alg('kd_angle') * (angleerror-my_alg('angleerror_prev'))/dt)
+        my_alg('angleerror_prev')=angleerror;
+        
+        my_alg('wR_set') = (forwardspeed-0.09*adjustmantangle)/0.05; %converting to angular speed
+        my_alg('wL_set') = (forwardspeed+0.09*adjustmentangle)/0.05; 
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
@@ -127,7 +149,7 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
 
         % Save data for ploting
         my_alg('wR_all') = [my_alg('wR_all') averageVelocity];
-        my_alg('wL_all') = [my_alg('wL_all') my_alg('theta')];
+        my_alg('wL_all') = [my_alg('wL_all') my_alg('phi')];
         my_alg('distance_all') = [my_alg('distance_all') my_alg('distance')];
         %% End %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    end
