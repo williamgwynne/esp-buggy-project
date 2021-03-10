@@ -57,7 +57,7 @@ if my_alg('is_first_time')
     my_alg('kd_speed')=0.012;%differential coefficient
     
     %PID coefficients for line-speed control
-    my_alg('kp_distance') = 0.01 %20 %36;
+    my_alg('kp_distance') = 5 %20 %36;
     my_alg('ki_distance') = 0 %100 %0.5 %600;
     my_alg('kd_distance') = 0 %20 %4 %0.45;
     my_alg('errordistance_sum') = 0;
