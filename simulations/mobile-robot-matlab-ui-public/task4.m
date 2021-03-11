@@ -25,8 +25,8 @@ if my_alg('is_first_time')
     my_alg('pi') = 3.1415926;
     
     % Initialise wheel angular velocity contollers
-    my_alg('wR_set') = 0;
-    my_alg('wL_set') = 0;
+    my_alg('wR_set') = 7;
+    my_alg('wL_set') = 6;
     
     my_alg('control_right') = MotorControl();
     my_alg('control_left') = MotorControl();
@@ -34,12 +34,13 @@ if my_alg('is_first_time')
     % Initialise vectors for saving velocity data
     my_alg('wR_all') = [];
     my_alg('wL_all') = [];
-    my_alg('distance_all') = [];
+    my_alg('rightencoder_all') = [];
+    my_alg('leftencoder_all') = [];
         
     % Initialise time parameters
     my_alg('t_sampling') = 0.03;
     my_alg('t_loop') = tic;
-    my_alg('t_finish') = 15;
+    my_alg('t_finish') = 5;
     
     %initialise kinematic variables
     my_alg('distance') = 0;
@@ -54,13 +55,6 @@ if my_alg('is_first_time')
     my_alg('ki_speed')=0.001;
     my_alg('kd_speed')=0.012;%differential coefficient
     
-    %PID coefficients for line-speed control
-    my_alg('kp_distance') = 144 %36;
-    my_alg('ki_distance') = 0;
-    my_alg('kd_distance') = 1.8 %0.45;
-    my_alg('errordistance_sum') = 0;
-    my_alg('errordistance_prev') = 0;
-    
 end
 
 %% Loop code runs here
@@ -73,43 +67,16 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
     
     if dt>my_alg('t_sampling')  % execute code when desired sampling time is reached
         my_alg('t_loop') = tic;
-
-        linearVelocity_left = my_alg('left encoder') * 0.05; %v=wr
-        linearVelocity_right = my_alg('right encoder') * 0.05; %v=wr
-        
-        averageVelocity = (linearVelocity_left + linearVelocity_right)/2;
-        my_alg('distance') = (averageVelocity*dt) + my_alg('distance');
-        
-        %speed adjustments
-        errordistance = 3 - my_alg('distance'); %3 metres is set distance for straight line
-        my_alg('errordistance_sum') = my_alg('errordistance_sum') + errordistance;
-           if (my_alg('errordistance_sum')>3)
-               my_alg('errordistance_sum')=3;
-           elseif (my_alg('errordistance_sum')<0)
-               my_alg('errordistance_sum')=0;
-           end
-        forwardspeed = (0 + (errordistance * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (errordistance-my_alg('errordistance_prev'))/dt))/dt; %0 is steady state speed
-        my_alg('errordistance_prev') = errordistance;
-        
-         if (-0.01 < forwardspeed < 0.01)
-            errorspeedright = 0
-            errorspeedleft = 0
-        end
-        
-        my_alg('wR_set') = forwardspeed/0.05; %converting to angular speed
-        my_alg('wL_set') = forwardspeed/0.05;  
-        
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Right wheel controller %%%%%%%%%%%%%%%%%%%%
-        errorspeedright = my_alg('wR_set')-my_alg('right encoder')
+        errorspeedright = my_alg('wR_set')-my_alg('right encoder');
         my_alg('errorspeedright_sum') = errorspeedright + my_alg('errorspeedright_sum');
         uR = (my_alg('wR_set') + (errorspeedright * my_alg('kp_speed') + my_alg('ki_speed') * my_alg('errorspeedright_sum')*dt + my_alg('kd_speed') * (errorspeedright-my_alg('errorspeedright_prev'))/dt))*my_alg('w2p_ratio');
         my_alg('errorspeedright_prev') = errorspeedright;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         % Left wheel controller %%%%%%%%%%%%%%%%%%%%%
-        errorspeedleft = my_alg('wL_set')-my_alg('left encoder')
+        errorspeedleft = my_alg('wL_set')-my_alg('left encoder');
         my_alg('errorspeedleft_sum') = errorspeedleft+my_alg('errorspeedleft_sum');
         uL = (my_alg('wL_set') + (errorspeedleft * my_alg('kp_speed') + my_alg('ki_speed') * my_alg('errorspeedleft_sum')*dt + my_alg('kd_speed') * (errorspeedleft-my_alg('errorspeedleft_prev'))/dt))*my_alg('w2p_ratio');
         my_alg('errorspeedleft_prev') = errorspeedleft;
@@ -120,9 +87,10 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         my_alg('left motor') = uL;
 
         % Save data for ploting
-        my_alg('wR_all') = [my_alg('wR_all') averageVelocity];
-        my_alg('wL_all') = [my_alg('wL_all') my_alg('right encoder')];
-        my_alg('distance_all') = [my_alg('distance_all') my_alg('distance')];
+        my_alg('wR_all') = [my_alg('wR_all') uR];
+        my_alg('wL_all') = [my_alg('wL_all') uL];
+        my_alg('rightencoder_all') = [my_alg('rightencoder_all') my_alg('right encoder')];
+        my_alg('leftencoder_all') = [my_alg('leftencoder_all') my_alg('left encoder')];
         %% End %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    end
 
@@ -139,11 +107,16 @@ else
       figure(2);
       plot(my_alg('wR_all'));
       hold on
-      %plot(my_alg('wL_all'));
-
+      plot(my_alg('wL_all'));
+      title('Motor control signal');
+      legend('right motor', 'left motor');
+      
       figure(3);
-      plot(my_alg('distance_all'));
+      plot(my_alg('rightencoder_all'));
       hold on
+      plot(my_alg('leftencoder_all'));
+      title('measured angular speed (from encoders)');
+      legend ('right encoder', 'left encoder');
 end
 
 return
