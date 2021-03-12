@@ -40,7 +40,7 @@ if my_alg('is_first_time')
     % Initialise time parameters
     my_alg('t_sampling') = 0.03;
     my_alg('t_loop') = tic;
-    my_alg('t_finish') = 10;
+    my_alg('t_finish') = 45;
     
     %initialising PID variables for motor control
     my_alg('w2p_ratio') = 901/12500;
@@ -81,8 +81,8 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         
     if dt>my_alg('t_sampling')  % execute code when desired sampling time is reached
         my_alg('t_loop') = tic;
-        if (-0.01 < my_alg('phi')) && (my_alg('phi') < 0.01)
-            if ((-0.01 < my_alg('forwardspeed')) && (my_alg('forwardspeed') < 0.01) && (0.99<my_alg('distance')) ) %sets the angle to turn by
+        if ((my_alg('phi') > -0.1) && (my_alg('phi') < 0.1) && (my_alg('cornercount') < 8))
+             if ((my_alg('distance')<1.01) && (my_alg('distance')>0.99) && (my_alg('forwardspeed') <20) && (my_alg('forwardspeed')>-20) ) %sets the angle to turn by
                 my_alg('cornercount') = my_alg('cornercount')+1;
                 corner=my_alg('cornercount') %trace, delete afterwards
                 if(my_alg('cornercount')<4)
@@ -92,16 +92,22 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
                 else
                     my_alg('phi') = my_alg('pi'); %complete a full turn at the 4th corner
                 end
+                my_alg('forwardspeed') = 0;
                 my_alg('phi_sum') = 0;
                 my_alg('phi_prev') = 0;
                 my_alg('distance') = 0;
-            else        
+                my_alg('wR_set') = 0;
+                my_alg('errorspeedright_prev') = 0;
+                my_alg('errorspeedright_sum') = 0;
+                my_alg('wL_set') = 0;
+                my_alg('errorspeedleft_prev') = 0;
+                my_alg('errorspeedleft_sum') = 0;
+             else        
                 %speed adjustments
                 linearVelocity_left = my_alg('left encoder') * 0.05; %v=wr
                 linearVelocity_right = my_alg('right encoder') * 0.05; %v=wr
                 averageVelocity = (linearVelocity_left + linearVelocity_right)/2;
                 my_alg('distance') = (averageVelocity*dt) + my_alg('distance');
-
                 my_alg('errordistance') = 1 - my_alg('distance');
                 my_alg('errordistance_sum') = my_alg('errordistance_sum') + my_alg('errordistance');
                 my_alg('forwardspeed') = (0 + (my_alg('errordistance') * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (my_alg('errordistance')-my_alg('errordistance_prev'))/dt))/dt; %0 is steady state speed
@@ -109,13 +115,17 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
                 my_alg('wR_set') = my_alg('forwardspeed')/0.05; %-0.09*adjustmentangle)/0.05; %converting to angular speed
                 my_alg('wL_set') = my_alg('forwardspeed')/0.05; %+0.09*adjustmentangle)/0.05; 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            end
-        else
+             end
+        elseif (my_alg('cornercount')<8)
             %controller for turning, linearity will return when |phi|<0.01
-            my_alg('diffphi') = (my_alg('left encoder') - my_alg('right encoder'))/my_alg('width_robot');%rads/sec
+            my_alg('diffphi') = (my_alg('left encoder') - my_alg('right encoder'))*(0.05/my_alg('width_robot'));%rads/sec
             my_alg('phi') = my_alg('phi') + my_alg('diffphi')*dt;%rads - phi is angular error, steady state is 0
             my_alg('phi_sum')=my_alg('phi_sum')+my_alg('phi');
-            rotationalspeed = 1 + (my_alg('phi') * my_alg('kp_angle') + my_alg('ki_angle') * my_alg('phi_sum')*dt + my_alg('kd_angle') * (my_alg('phi')-my_alg('phi_prev'))/dt);
+            if (my_alg('phi')>0)
+                rotationalspeed = 0.1; %+ (my_alg('phi') * my_alg('kp_angle') + my_alg('ki_angle') * my_alg('phi_sum')*dt + my_alg('kd_angle') * (my_alg('phi')-my_alg('phi_prev'))/dt);
+            else
+                rotationalspeed = -0.1;
+            end
             my_alg('phi_prev') = my_alg('phi');
             my_alg('wR_set') = -rotationalspeed/0.05; %opposite wheel direction for clockwise motion
             my_alg('wR_set') = rotationalspeed/0.05;
@@ -138,11 +148,6 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         % Apply pwm signal
         my_alg('right motor') = uR;
         my_alg('left motor') = uL;       
-        
-        % Save data for ploting
-        my_alg('wR_all') = [my_alg('wR_all') my_alg('phi')];
-        my_alg('wL_all') = [my_alg('wL_all') my_alg('right encoder')];
-        my_alg('distance_all') = [my_alg('distance_all') my_alg('distance')];
         %% End %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    end
 
@@ -154,16 +159,6 @@ else
     my_alg('left motor') = 0;
     % Stop session
     my_alg('is_done') = true;
-    
-%      % Plot saved velocities for right and left wheel
-       figure(2);
-       plot(my_alg('wR_all'));
-       hold on
-      %plot(my_alg('wL_all'));
-
-       figure(3);
-       plot(my_alg('distance_all'));
-       hold on
 end
 
 return
