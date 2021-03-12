@@ -22,8 +22,7 @@ if my_alg('is_first_time')
     %% Setup initial parameters here
     
     my_alg('dc_motor_signal_mode') = 'voltage_pwm';     % change if necessary to 'omega_setpoint'
-    my_alg('pi') = 3.141592654;
-    my_alg('width_robot') = 0.18;
+    my_alg('pi') = 3.1415926;
     
     % Initialise wheel angular velocity contollers
     my_alg('wR_set') = 7;
@@ -41,14 +40,10 @@ if my_alg('is_first_time')
     % Initialise time parameters
     my_alg('t_sampling') = 0.03;
     my_alg('t_loop') = tic;
-<<<<<<< HEAD:simulations/mobile-robot-matlab-ui-public/task4.m
     my_alg('t_finish') = 5;
     
     %initialise kinematic variables
     my_alg('distance') = 0;
-=======
-    my_alg('t_finish') = 45;
->>>>>>> controlled-square:simulations/mobile-robot-matlab-ui-public/controlled_square.m
     
     %initialising PID variables for motor control
     my_alg('w2p_ratio') = 901/12500;
@@ -60,26 +55,6 @@ if my_alg('is_first_time')
     my_alg('ki_speed')=0.001;
     my_alg('kd_speed')=0.012;%differential coefficient
     
-<<<<<<< HEAD:simulations/mobile-robot-matlab-ui-public/task4.m
-=======
-    %PID coefficients for line-speed control
-    my_alg('forwardspeed') = 0;
-    my_alg('distance') = 0;
-    my_alg('kp_distance') = 144; %20 %36;
-    my_alg('ki_distance') = 0; %100 %0.5 %600;
-    my_alg('kd_distance') = 1.8; %20 %4 %0.45;
-    my_alg('errordistance_sum') = 0;
-    my_alg('errordistance_prev') = 0;
-    
-    %initialising PID coefficients for turning control
-    my_alg('cornercount') = 0;
-    my_alg('phi') = 0;
-    my_alg('phi_sum') = 0;
-    my_alg('phi_prev') = 0;
-    my_alg('kp_angle') = 0;
-    my_alg('ki_angle') = 0;
-    my_alg('kd_angle') = 0;
->>>>>>> controlled-square:simulations/mobile-robot-matlab-ui-public/controlled_square.m
 end
 
 %% Loop code runs here
@@ -89,61 +64,9 @@ time = toc(my_alg('tic'));      % Get time since start of session
 if time < my_alg('t_finish')    % Check for algorithm finish time
     
     dt = toc(my_alg('t_loop'));
-        
+    
     if dt>my_alg('t_sampling')  % execute code when desired sampling time is reached
         my_alg('t_loop') = tic;
-<<<<<<< HEAD:simulations/mobile-robot-matlab-ui-public/task4.m
-=======
-        if ((my_alg('phi') > -0.1) && (my_alg('phi') < 0.1) && (my_alg('cornercount') < 8))
-             if ((my_alg('distance')<1.01) && (my_alg('distance')>0.99) && (my_alg('forwardspeed') <20) && (my_alg('forwardspeed')>-20) ) %sets the angle to turn by
-                my_alg('cornercount') = my_alg('cornercount')+1;
-                corner=my_alg('cornercount') %trace, delete afterwards
-                if(my_alg('cornercount')<4)
-                    my_alg('phi') = my_alg('pi')/2;
-                elseif (my_alg('cornercount')>4)
-                    my_alg('phi') = -my_alg('pi')/2;
-                else
-                    my_alg('phi') = my_alg('pi'); %complete a full turn at the 4th corner
-                end
-                my_alg('forwardspeed') = 0;
-                my_alg('phi_sum') = 0;
-                my_alg('phi_prev') = 0;
-                my_alg('distance') = 0;
-                my_alg('wR_set') = 0;
-                my_alg('errorspeedright_prev') = 0;
-                my_alg('errorspeedright_sum') = 0;
-                my_alg('wL_set') = 0;
-                my_alg('errorspeedleft_prev') = 0;
-                my_alg('errorspeedleft_sum') = 0;
-             else        
-                %speed adjustments
-                linearVelocity_left = my_alg('left encoder') * 0.05; %v=wr
-                linearVelocity_right = my_alg('right encoder') * 0.05; %v=wr
-                averageVelocity = (linearVelocity_left + linearVelocity_right)/2;
-                my_alg('distance') = (averageVelocity*dt) + my_alg('distance');
-                my_alg('errordistance') = 1 - my_alg('distance');
-                my_alg('errordistance_sum') = my_alg('errordistance_sum') + my_alg('errordistance');
-                my_alg('forwardspeed') = (0 + (my_alg('errordistance') * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (my_alg('errordistance')-my_alg('errordistance_prev'))/dt))/dt; %0 is steady state speed
-                my_alg('errordistance_prev') = my_alg('errordistance');
-                my_alg('wR_set') = my_alg('forwardspeed')/0.05; %-0.09*adjustmentangle)/0.05; %converting to angular speed
-                my_alg('wL_set') = my_alg('forwardspeed')/0.05; %+0.09*adjustmentangle)/0.05; 
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-             end
-        elseif (my_alg('cornercount')<8)
-            %controller for turning, linearity will return when |phi|<0.01
-            my_alg('diffphi') = (my_alg('left encoder') - my_alg('right encoder'))*(0.05/my_alg('width_robot'));%rads/sec
-            my_alg('phi') = my_alg('phi') + my_alg('diffphi')*dt;%rads - phi is angular error, steady state is 0
-            my_alg('phi_sum')=my_alg('phi_sum')+my_alg('phi');
-            if (my_alg('phi')>0)
-                rotationalspeed = 0.1; %+ (my_alg('phi') * my_alg('kp_angle') + my_alg('ki_angle') * my_alg('phi_sum')*dt + my_alg('kd_angle') * (my_alg('phi')-my_alg('phi_prev'))/dt);
-            else
-                rotationalspeed = -0.1;
-            end
-            my_alg('phi_prev') = my_alg('phi');
-            my_alg('wR_set') = -rotationalspeed/0.05; %opposite wheel direction for clockwise motion
-            my_alg('wR_set') = rotationalspeed/0.05;
-        end
->>>>>>> controlled-square:simulations/mobile-robot-matlab-ui-public/controlled_square.m
         
         % Right wheel controller %%%%%%%%%%%%%%%%%%%%
         errorspeedright = my_alg('wR_set')-my_alg('right encoder');
@@ -161,7 +84,6 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         
         % Apply pwm signal
         my_alg('right motor') = uR;
-<<<<<<< HEAD:simulations/mobile-robot-matlab-ui-public/task4.m
         my_alg('left motor') = uL;
 
         % Save data for ploting
@@ -169,9 +91,6 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         my_alg('wL_all') = [my_alg('wL_all') uL];
         my_alg('rightencoder_all') = [my_alg('rightencoder_all') my_alg('right encoder')];
         my_alg('leftencoder_all') = [my_alg('leftencoder_all') my_alg('left encoder')];
-=======
-        my_alg('left motor') = uL;       
->>>>>>> controlled-square:simulations/mobile-robot-matlab-ui-public/controlled_square.m
         %% End %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    end
 
@@ -183,7 +102,6 @@ else
     my_alg('left motor') = 0;
     % Stop session
     my_alg('is_done') = true;
-<<<<<<< HEAD:simulations/mobile-robot-matlab-ui-public/task4.m
     
 %      % Plot saved velocities for right and left wheel
       figure(2);
@@ -199,8 +117,6 @@ else
       plot(my_alg('leftencoder_all'));
       title('measured angular speed (from encoders)');
       legend ('right encoder', 'left encoder');
-=======
->>>>>>> controlled-square:simulations/mobile-robot-matlab-ui-public/controlled_square.m
 end
 
 return
