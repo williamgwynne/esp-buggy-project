@@ -73,31 +73,40 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
     
     if dt>my_alg('t_sampling')  % execute code when desired sampling time is reached
         my_alg('t_loop') = tic;
+        if ((my_alg('distance') < 2.95) || (my_alg('distance') > 3.05))
+            linearVelocity_left = my_alg('left encoder') * 0.05; %v=wr
+            linearVelocity_right = my_alg('right encoder') * 0.05; %v=wr
 
-        linearVelocity_left = my_alg('left encoder') * 0.05; %v=wr
-        linearVelocity_right = my_alg('right encoder') * 0.05; %v=wr
-        
-        averageVelocity = (linearVelocity_left + linearVelocity_right)/2;
-        my_alg('distance') = (averageVelocity*dt) + my_alg('distance');
-        
-        %speed adjustments
-        errordistance = 3 - my_alg('distance'); %3 metres is set distance for straight line
-        my_alg('errordistance_sum') = my_alg('errordistance_sum') + errordistance;
-           if (my_alg('errordistance_sum')>3)
-               my_alg('errordistance_sum')=3;
-           elseif (my_alg('errordistance_sum')<0)
-               my_alg('errordistance_sum')=0;
-           end
-        forwardspeed = (0 + (errordistance * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (errordistance-my_alg('errordistance_prev'))/dt))/dt; %0 is steady state speed
-        my_alg('errordistance_prev') = errordistance;
-        
-         if (-0.01 < forwardspeed < 0.01)
-            errorspeedright = 0
-            errorspeedleft = 0
+            my_alg('averageVelocity') = (linearVelocity_left + linearVelocity_right)/2;
+            my_alg('distance') = (my_alg('averageVelocity')*dt) + my_alg('distance');
+
+            %speed adjustments
+            errordistance = 3 - my_alg('distance'); %3 metres is set distance for straight line
+            my_alg('errordistance_sum') = my_alg('errordistance_sum') + errordistance;
+               if (my_alg('errordistance_sum')>3)
+                   my_alg('errordistance_sum')=3;
+               elseif (my_alg('errordistance_sum')<0)
+                   my_alg('errordistance_sum')=0;
+               end
+            forwardspeed = (0 + (errordistance * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (errordistance-my_alg('errordistance_prev'))/dt))/dt; %0 is steady state speed
+            my_alg('errordistance_prev') = errordistance;
+
+             if (-0.01 < forwardspeed < 0.01)
+                errorspeedright = 0
+                errorspeedleft = 0
+            end
+
+            my_alg('wR_set') = forwardspeed/0.05; %converting to angular speed
+            my_alg('wL_set') = forwardspeed/0.05;  
+        else
+            my_alg('wR_set') = 0;
+            my_alg('wL_set') = 0;
+            my_alg('averageVelocity') = 0;
+            my_alg('errorspeedright_sum') = 0;
+            my_alg('errorspeedleft_sum') = 0;
+            my_alg('errorspeedright_prev') = 0;
+            my_alg('errorspeedleft_prev') = 0;
         end
-        
-        my_alg('wR_set') = forwardspeed/0.05; %converting to angular speed
-        my_alg('wL_set') = forwardspeed/0.05;  
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
@@ -118,11 +127,6 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         % Apply pwm signal
         my_alg('right motor') = uR;
         my_alg('left motor') = uL;
-
-        % Save data for ploting
-        my_alg('wR_all') = [my_alg('wR_all') averageVelocity];
-        my_alg('wL_all') = [my_alg('wL_all') my_alg('right encoder')];
-        my_alg('distance_all') = [my_alg('distance_all') my_alg('distance')];
         %% End %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    end
 
@@ -134,16 +138,6 @@ else
     my_alg('left motor') = 0;
     % Stop session
     my_alg('is_done') = true;
-    
-%      % Plot saved velocities for right and left wheel
-      figure(2);
-      plot(my_alg('wR_all'));
-      hold on
-      %plot(my_alg('wL_all'));
-
-      figure(3);
-      plot(my_alg('distance_all'));
-      hold on
 end
 
 return
