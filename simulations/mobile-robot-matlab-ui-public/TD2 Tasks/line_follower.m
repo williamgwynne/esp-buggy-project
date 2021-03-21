@@ -39,7 +39,7 @@ if my_alg('is_first_time')
     % Initialise time parameters
     my_alg('t_sampling') = 0.03;
     my_alg('t_loop') = tic;
-    my_alg('t_finish') = 20;
+    my_alg('t_finish') = 45;
     
     %initialise kinematic variables
     my_alg('distance') = 0;
@@ -62,14 +62,14 @@ if my_alg('is_first_time')
     my_alg('errordistance_prev') = 0;
     
     %PID coefficients for line error
-    my_alg('kp_line_err') = 3.5;%2.5 %1.3
-    my_alg('ki_line_err') = 4; %4.5 %4.56;
+    my_alg('kp_line_err') = 3;%2.5 %1.3
+    my_alg('ki_line_err') = 1.5; %4.5 %4.56;
     my_alg('kd_line_err') = 0.10;%0.05 %0.055;
     my_alg('line_err_sum') = 0;
     my_alg('line_err_prev') = 0;
-    my_alg('wR_ratio_values') = zeros(1,50);
+    my_alg('wR_ratio_values') = zeros(1,20);
     my_alg('wR_ratio_values') = my_alg('wR_ratio_values') + 3.5;
-    my_alg('wL_ratio_values') = zeros(1,50);
+    my_alg('wL_ratio_values') = zeros(1,20);
     my_alg('wL_ratio_values') = my_alg('wR_ratio_values') + 3.5;
     my_alg('ratio_array_index') = 1;
     my_alg('P_sensor') = 0;
@@ -147,8 +147,8 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
                     my_alg('ratio_array_index') = 1;
                 end
             else
-                my_alg('wR_ratio') = sum(my_alg('wR_ratio_values'), 'all')/50; %average of stored values
-                my_alg('wL_ratio') = sum(my_alg('wL_ratio_values'), 'all')/50;
+                my_alg('wR_ratio') = sum(my_alg('wR_ratio_values'), 'all')/20; %average of stored values
+                my_alg('wL_ratio') = sum(my_alg('wL_ratio_values'), 'all')/20;
             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
