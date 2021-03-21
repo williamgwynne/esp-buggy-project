@@ -40,7 +40,7 @@ if my_alg('is_first_time')
     % Initialise time parameters
     my_alg('t_sampling') = 0.03;
     my_alg('t_loop') = tic;
-    my_alg('t_finish') = 10;
+    my_alg('t_finish') = 20;
     
     %initialise kinematic variables
     my_alg('distance') = 0;
@@ -63,12 +63,14 @@ if my_alg('is_first_time')
     my_alg('errordistance_prev') = 0;
     
     %PID coefficients for line error
-    my_alg('kp_line_err') = 1.35;
-    my_alg('ki_line_err') = 4.56;
-    my_alg('kd_line_err') = 0.055;
+    my_alg('kp_line_err') = 3%2.5 %1.35;
+    my_alg('ki_line_err') = 1 %4.5 %4.56;
+    my_alg('kd_line_err') = 0.10%0.05 %0.055;
     my_alg('line_err_sum') = 0;
     my_alg('line_err_prev') = 0;
-    
+    my_alg('P_sensor') = 0
+    my_alg('I_sensor') = 0
+    my_alg('D_sensor') = 0
 end
 
 %% Loop code runs here
@@ -98,11 +100,14 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
             line_error = (sensor_err_numerator/sensor_err_denominator) - 3.5;
             line_error_mod = abs(line_error);
             my_alg('line_err_sum') = my_alg('line_err_sum') + line_error;
+            my_alg('P_sensor') = my_alg('kp_line_err')*line_error_mod
+            my_alg('I_sensor') = my_alg('ki_line_err')*my_alg('line_err_sum')*dt
+            my_alg('D_sensor') = my_alg('kd_line_err')*(line_error-my_alg('line_err_prev'))/dt
             if (line_error<0) %line is to the left
                 wR_ratio = 3.5; %3.5 is mid-point of the sensor array
-                wL_ratio = 3.5-(my_alg('kp_line_err')*line_error_mod + my_alg('ki_line_err')*my_alg('line_err_sum')*dt+my_alg('kd_line_err')*((line_error-my_alg('line_err_prev'))/dt));
+                wL_ratio = 3.5 -( my_alg('P_sensor') + my_alg('I_sensor') + my_alg('D_sensor'));
             elseif (line_error>0) %line is to the right
-                wR_ratio = 3.5-(my_alg('kp_line_err')*line_error_mod + my_alg('ki_line_err')*my_alg('line_err_sum')*dt+my_alg('kd_line_err')*((line_error-my_alg('line_err_prev'))/dt));
+                wR_ratio = 3.5-( my_alg('P_sensor') + my_alg('I_sensor') + my_alg('D_sensor'));
                 wL_ratio = 3.5;
             else %line error = 0
                 wR_ratio = 3.5;
@@ -129,7 +134,7 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
                elseif (my_alg('errordistance_sum')<0)
                    my_alg('errordistance_sum')=0;
                end
-            forwardspeed = 0.7 ;%(0 + (errordistance * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (errordistance-my_alg('errordistance_prev'))/dt))/dt; %0 is steady state speed
+            forwardspeed = 0.35 ;%(0 + (errordistance * my_alg('kp_distance') + my_alg('ki_distance') * my_alg('errordistance_sum')*dt + my_alg('kd_distance') * (errordistance-my_alg('errordistance_prev'))/dt))/dt; %0 is steady state speed
             
             if (forwardspeed>0.7) %linear speed where angular velocity saturates - if need be, calculate a more accurate value
                 forwardspeed=0.7;

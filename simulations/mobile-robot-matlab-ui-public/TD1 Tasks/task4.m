@@ -26,7 +26,7 @@ if my_alg('is_first_time')
     
     % Initialise wheel angular velocity contollers
     my_alg('wR_set') = 7;
-    my_alg('wL_set') = 6;
+    my_alg('wL_set') = 7;
     
     my_alg('control_right') = MotorControl();
     my_alg('control_left') = MotorControl();
@@ -51,9 +51,9 @@ if my_alg('is_first_time')
     my_alg('errorspeedleft_prev')=0;
     my_alg('errorspeedright_sum')=0;
     my_alg('errorspeedleft_sum')=0;
-    my_alg('kp_speed')=0.3;%proportional coefficient
-    my_alg('ki_speed')=0.001;
-    my_alg('kd_speed')=0.012;%differential coefficient
+    my_alg('kp_speed')=1.8;%proportional coefficient
+    my_alg('ki_speed')=0;
+    my_alg('kd_speed')=0.035;%0.012;%differential coefficient
     
 end
 
