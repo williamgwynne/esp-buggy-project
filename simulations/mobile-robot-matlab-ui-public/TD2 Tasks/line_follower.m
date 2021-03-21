@@ -36,8 +36,6 @@ if my_alg('is_first_time')
     my_alg('dt_all') = [];
     my_alg('dt_total') = 0;
     my_alg('distance_all') = [];
-    my_alg('wR_ratio_values') = [3.5 3.5 3.5 3.5 3.5 3.5 3.5 3.5 3.5 3.5];
-    my_alg('wL_ratio_values') = [3.5 3.5 3.5 3.5 3.5 3.5 3.5 3.5 3.5 3.5];
     % Initialise time parameters
     my_alg('t_sampling') = 0.03;
     my_alg('t_loop') = tic;
@@ -52,9 +50,9 @@ if my_alg('is_first_time')
     my_alg('errorspeedleft_prev')=0;
     my_alg('errorspeedright_sum')=0;
     my_alg('errorspeedleft_sum')=0;
-    my_alg('kp_speed')=1.8;%proportional coefficient
+    my_alg('kp_speed')=0.03;%proportional coefficient
     my_alg('ki_speed')=0;
-    my_alg('kd_speed')=0.035;%differential coefficient
+    my_alg('kd_speed')=0.012;%differential coefficient
     
     %PID coefficients for line-speed control
     my_alg('kp_distance') = 144 %36;
@@ -69,6 +67,11 @@ if my_alg('is_first_time')
     my_alg('kd_line_err') = 0.10;%0.05 %0.055;
     my_alg('line_err_sum') = 0;
     my_alg('line_err_prev') = 0;
+    my_alg('wR_ratio_values') = zeros(1,50);
+    my_alg('wR_ratio_values') = my_alg('wR_ratio_values') + 3.5;
+    my_alg('wL_ratio_values') = zeros(1,50);
+    my_alg('wL_ratio_values') = my_alg('wR_ratio_values') + 3.5;
+    my_alg('ratio_array_index') = 1;
     my_alg('P_sensor') = 0;
     my_alg('I_sensor') = 0;
     my_alg('D_sensor') = 0;
@@ -106,9 +109,9 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
                 my_alg('line_error') = (sensor_err_numerator/sensor_err_denominator) - 3.5;
                 line_error_mod = abs(my_alg('line_error'));
                 my_alg('line_err_sum') = my_alg('line_err_sum') + my_alg('line_error');
-                my_alg('P_sensor') = my_alg('kp_line_err')*line_error_mod
-                my_alg('I_sensor') = my_alg('ki_line_err')*my_alg('line_err_sum')*dt
-                my_alg('D_sensor') = my_alg('kd_line_err')*(my_alg('line_error')-my_alg('line_err_prev'))/dt
+                my_alg('P_sensor') = my_alg('kp_line_err')*line_error_mod;
+                my_alg('I_sensor') = my_alg('ki_line_err')*my_alg('line_err_sum')*dt;
+                my_alg('D_sensor') = my_alg('kd_line_err')*(my_alg('line_error')-my_alg('line_err_prev'))/dt;
                 if (my_alg('line_error')<0) %line is to the left
                    my_alg('wR_ratio') = 3.5; %3.5 is mid-point of the sensor array
                    my_alg('wL_ratio') = 3.5 -( my_alg('P_sensor') + my_alg('I_sensor') + my_alg('D_sensor'));
@@ -132,16 +135,20 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
                 my_alg('line_err_prev') = my_alg('line_error');
                
                 wR_ratio_values = my_alg('wR_ratio_values');
-                circshift(wR_ratio_values,1);
-                wR_ratio_values(10) = my_alg('wR_ratio')
+                wR_ratio_values(my_alg('ratio_array_index')) = my_alg('wR_ratio');
                 my_alg('wR_ratio_values') = wR_ratio_values;
                 
-                wL_ratio_values = my_alg('wL_ratio_values');
-                circshift(wL_ratio_values,1);
-                wL_ratio_values(10) = my_alg('wL_ratio')
+                wL_ratio_values = my_alg('wL_ratio_values'); %storing history of wheel ratios to calculate average to adjust to line breaks
+                wL_ratio_values(my_alg('ratio_array_index')) = my_alg('wL_ratio');%temporary array used as my_alg doesn't allow array indexing, change this when converting to C++ code
                 my_alg('wL_ratio_values') = wL_ratio_values;
                 
-                
+                my_alg('ratio_array_index') = my_alg('ratio_array_index') + 1;
+                if (my_alg('ratio_array_index') >size(my_alg('wL_ratio_values')));
+                    my_alg('ratio_array_index') = 1;
+                end
+            else
+                my_alg('wR_ratio') = sum(my_alg('wR_ratio_values'), 'all')/50; %average of stored values
+                my_alg('wL_ratio') = sum(my_alg('wL_ratio_values'), 'all')/50;
             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
