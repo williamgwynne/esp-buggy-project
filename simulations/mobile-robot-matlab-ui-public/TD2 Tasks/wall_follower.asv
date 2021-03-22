@@ -78,6 +78,15 @@ if my_alg('is_first_time')
     my_alg('wL_ratio')= 3.5;
     my_alg('wR_ratio')= 3.5;
     my_alg('line_error')=0;
+    
+    %PID for sonar error
+    my_alg('sonar_error')=0
+    my_alg('kp_sonar')=0
+   my_alg('ki_sonar')=0
+   my_alg('kd_sonar')=0
+   my_alg('sonar_err_sum')=0
+   my_alg('sonar_err_prev')=0
+
 end
 
 %% Loop code runs here
@@ -187,9 +196,19 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         setpoint = my_alg('sonar') - 1
-        sonar_error = 1 + setpoint
-      
+        my_alg('sonar_error') = 1 + setpoint
+       
         
+      if (my_alg('sonar_error')<0) %line is to the left
+                    my_alg('wR_ratio') = 3.5; %3.5 is mid-point of the sensor array
+                    my_alg('wL_ratio') = 3.5 - (my_alg('P_sensor') + my_alg('I_sensor') + my_alg('D_sensor'));
+                elseif (my_alg('sonar_error')>0) %line is to the right
+                     my_alg('wR_ratio') = 3.5-( my_alg('P_sensor') + my_alg('I_sensor') + my_alg('D_sensor'));                     my_alg('wL_ratio') = 3.5;
+                 else %line error = 0
+                    my_alg('wR_ratio') = 3.5;
+                    my_alg('wL_ratio') = 3.5;
+                    my_alg('line_err_sum') = 0;
+      end
         
         
         
