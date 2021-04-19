@@ -30,7 +30,7 @@ if my_alg('is_first_time')
     % Initialise time parameters
     my_alg('t_sampling') = 0.03;
     my_alg('t_loop') = tic;
-    my_alg('t_finish') = 1;
+    my_alg('t_finish') = 5;
 end
 
 %% Loop code runs here
@@ -47,8 +47,10 @@ if time < my_alg('t_finish')     % Check for algorithm finish time
         %% Add your loop code here %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
          
         % Apply pwm signal (range is [-1,1])
-        my_alg('right motor') = 0.7;
+        my_alg('right motor') = 0.5;
         my_alg('left motor') = 0.5;
+        
+        my_alg('reflectance')
 
         % Save data for ploting
         my_alg('wR_all') = [my_alg('wR_all') my_alg('right encoder')];

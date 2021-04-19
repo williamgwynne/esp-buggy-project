@@ -9,7 +9,7 @@ function my_alg = line_follower(my_alg, robot)
 %    my_alg('right encoder') - right encoder velocity
 %    my_alg('left encoder')  - left encoder velocity
 %    my_alg('reflectance')   - reflectance sensor output value
-%    my_alg('reflectance raw')   - reflectance sensor raw output values
+%    my_alg('reflectance_raw')   - reflectance sensor raw output values
 %    my_alg('sonar')         - sonar measured distance (m)
 % 
 % Sending controls to actuators (if present on the robot)
@@ -98,7 +98,7 @@ if time < my_alg('t_finish')    % Check for algorithm finish time
             my_alg('distance') = (my_alg('averageVelocity')*dt) + my_alg('distance');
 
             %deviation adjustments
-            sensorratio = 1-((my_alg('reflectance raw')-500)/2000);
+            sensorratio = 1-((my_alg('reflectance_raw')-500)/2000);
             sensor_err_numerator=0;
             sensor_err_denominator=sum(sensorratio, 'all');
             for i=0:7

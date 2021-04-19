@@ -5,6 +5,8 @@ classdef WorldClass < dynamicprops
         
         primitives      % Struct with geometric primitives as fields
                         % This property is used for sensor/world interaction
+        
+        ramps           % contains 8 vertices after transformation
     end
     methods
         function obj = WorldClass(varargin)
@@ -120,9 +122,23 @@ classdef WorldClass < dynamicprops
         function h = plot(obj)
             h = [];
             hold on
+            % plot ramps
+            % TODO: refactor this section
+            if ~isempty(obj.ramps)
+                for i = 1:size(obj.ramps, 3)
+                    pts = obj.ramps(:,:,i);
+                    fill([pts(1,1:2) pts(1,7:8)], [pts(2,1:2) pts(2,7:8)], 0.9*[1 1 1],...
+                             [pts(1,3:4) pts(1,5:6)], [pts(2,3:4) pts(2,5:6)], 0.9*[1 1 1],...
+                             [pts(1,2:3) pts(1,6:7)], [pts(2,2:3) pts(2,6:7)], 0.7*[1 1 1],...
+                             'FaceAlpha', 0.5, 'EdgeColor', 'none')';
+                end
+            end
+            
+            % plot shapes
             for i = 1:length(obj.shapes)
                 h = [h plot_shape(obj.shapes{i}, 'alpha', 1)];
             end
+            
             %hold off
             box on
             axis equal
@@ -255,6 +271,16 @@ classdef WorldClass < dynamicprops
                 edit_mode = 'path';
             end
             
+            pt_add_ramp = uipushtool(tb,'CData',imread('add_ramp.png'),...
+                'TooltipString','Add ramp','Separator','on',...
+                'ClickedCallback', @addRampClicked);
+            
+            function addRampClicked(src, event)
+                title({'Add ramp:    Use mouse left click to add center -> direction -> corner.';...
+                    'Use SPACE to finish ramp.'})
+                edit_mode = 'ramp';
+            end
+            
             pt_delete_shape = uipushtool(tb,'CData',imread('delete_shape.png'),...
                 'TooltipString','Delete shape','Separator','on',...
                 'ClickedCallback', @deleteShapeClicked);
@@ -307,9 +333,9 @@ classdef WorldClass < dynamicprops
                     h = [h, plot_shape(obj.shapes{end}, 'alpha', 1)];
                 elseif strcmp(edit_mode, 'circle')
                     if first_time
-                        center = [xt; yt];
                         first_time = false;
-                        % plot radius
+                        center = [xt; yt];
+                        % plot center
                         if ~ishold,     hold on,    end
                         h_tmp = plot(xt, yt, 'r.', 'MarkerSize', 10);
                     else
@@ -363,6 +389,72 @@ classdef WorldClass < dynamicprops
                         % plot lines
                         delete(h_tmp)
                         h_tmp = plot(pts_tmp(1, :), pts_tmp(2, :), 'r-');
+                    end
+                elseif strcmp(edit_mode, 'ramp')
+                    if first_time
+                        first_time = false;
+                        ramp_state = 1;
+                        % initialize
+                        center = [];
+                        alpha = [];
+                        pts = [];
+                    end
+                    if button == 32
+                        if ~isempty(pts)
+                            % save ramp
+                            obj.ramps = cat(3, obj.ramps, pts);
+                            %h = [h h_tmp];
+                            h_tmp = [];
+                        else
+                            delete(h_tmp)
+                        end
+                        % Reset
+                        first_time = true;
+                        continue
+                    else
+                        try
+                            delete(h_tmp)
+                        catch
+                        end
+                    end
+                    if ramp_state == 1
+                        % STATE: select center
+                        center = [xt; yt];
+                        alpha = [];
+                        pts = [];
+                        % plot center
+                        if ~ishold,     hold on,    end
+                        h_tmp = plot(xt, yt, 'r.', 'MarkerSize', 10);
+                        % change state
+                        ramp_state = 2;
+                    elseif ramp_state == 2
+                        % STATE: select direction (angle)
+                        v = unit_vector([xt - center(1); yt - center(2)]);
+                        alpha = atan2(v(2), v(1));
+                        % plot direction
+                        h_tmp = [h_tmp, plot(center(1)+[0 v(1)], center(2)+[0 v(2)], 'r-', 'MarkerSize', 10)];
+                        % change state
+                        ramp_state = 3;
+                    elseif ramp_state == 3
+                        % STATE: select a corner
+                        R = [cos(alpha) -sin(alpha);
+                             sin(alpha) cos(alpha)];
+                        % move everything to ramp local reference
+                        p = abs(R' * ([xt; yt] - center));
+                        x = linspace(-p(1), p(1), 4);
+                        x = [x fliplr(x)];
+                        y = repmat(-p(2), 1, 4);
+                        y = [y -y];
+                        % Transform points to world frame
+                        pts = R * [x;y] + repmat(center, 1, 8);
+                        % plot ramp
+                        delete(h_tmp)
+                        h_tmp = fill([pts(1,1:2) pts(1,7:8)], [pts(2,1:2) pts(2,7:8)], 0.9*[1 1 1],...
+                                     [pts(1,3:4) pts(1,5:6)], [pts(2,3:4) pts(2,5:6)], 0.9*[1 1 1],...
+                                     [pts(1,2:3) pts(1,6:7)], [pts(2,2:3) pts(2,6:7)], 0.7*[1 1 1],...
+                                      'FaceAlpha', 0.5, 'EdgeColor', 'none')';
+                        % change state
+                        ramp_state = 1;
                     end
                 elseif strcmp(edit_mode, 'delete')
                     % loop over all shapes and delete the FIRST match

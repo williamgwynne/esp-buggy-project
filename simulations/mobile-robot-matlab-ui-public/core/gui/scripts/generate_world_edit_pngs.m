@@ -2,7 +2,7 @@
 
 close all, clear all, clc
 alpha = 0.9;
-target_path = fullfile(pwd, 'gui', 'icons');
+target_path = fullfile(pwd, 'core', 'gui', 'icons');
 
 
 %% (1) Add polygon
@@ -82,3 +82,21 @@ set(gca,'Visible','off')
 cdata = imresize(print('-RGBImage'), [30 40]);
 cdata = cdata(:, 7:36, :);
 imwrite(cdata, fullfile(target_path, 'delete_shape.png'), 'PNG')
+
+%% (6) Add ramp
+figure(fid);    fid = fid + 1;
+shape.type = 'polygon';
+shape.color = 'black';
+shape.vertices = [-0.9 1.9 1 0; 1 1 2 2];
+plot_shape(shape, 'alpha', alpha);
+axis equal
+axis([-1 2 0 3])
+set(gca,'Visible','off')
+
+cdata = imresize(print('-RGBImage'), [30 40]);
+cdata = cdata(:, 7:36, :);
+
+D = ones( size(cdata(:,:,1)) );
+%D( all( cdata==255, 3 ) ) = 0; 
+
+imwrite(cdata, fullfile(target_path, 'add_ramp.png'), 'alpha',D)
