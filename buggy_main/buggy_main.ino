@@ -1,10 +1,10 @@
 #include "Arduino.h"
 #include "MotorDriver.h"
-#include "Encoder.h"
 #include "math.h"
+#include "ESP32Encoder.h"
 
-MotorDriver rmotor, lmotor; //HAVING LINE SENSOR CONNECTED MEANS THIS WON'T COMPILE - CHECK PINS ARE CORRECTLY CONNECTED
-Encoder EncR, EncL;
+MotorDriver rmotor, lmotor; //DISCONNECT POWER CONNECTOR FROM LINE SENSOR BEFORE UPLOADING
+ESP32Encoder EncR, EncL;
 
 double wR_set = 0, wL_set = 0;
 double distance = 0;
@@ -27,6 +27,8 @@ double errordistance_sum = 0, errordistance_prev = 0;
 
 void setup()
 {
+
+  EncR.attachFullQuad(34, 36);
   //initialising PWM........................................................................................
   rmotor.SetMotorType(DC_MOTOR);            // dc brushed motor
   rmotor.SetBaseFreq(5000);                 // pwm base frequency
@@ -45,9 +47,12 @@ void loop()
   double toc = micros()/1000000;
   double dt = toc - toc_last;
   toc_last = toc;
-  EncR.ReadSensors();
-  EncL.ReadSensors();
-  double forwardSpeed = (EncR.Get_Speed()+EncL.Get_speed())/2;
+  int piss = int(EncR.getCount());
+  Serial.print(piss);
+  Serial.print("\n");
+  float EncR_Speed = EncR.getCount()
+  EncR.clearCount();
+//  double forwardSpeed = (EncR.Get_Speed()+EncL.Get_speed())/2;
   
   if (distance < 3) {     //stops running after 3 metres, to imitate TD1 task 5
     
