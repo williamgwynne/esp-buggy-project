@@ -1,12 +1,14 @@
 #include "Arduino.h"
 #include "MotorDriver.h"
 #include "math.h"
+#include "Ticker.h"
 #include "ESP32Encoder.h"
 
 MotorDriver rmotor, lmotor; //DISCONNECT POWER CONNECTOR FROM LINE SENSOR BEFORE UPLOADING
-ESP32Encoder EncR, EncL;
+ESP32Encoder EncR;
+ESP32Encoder EncL;
 
-double wR_set = 0, wL_set = 0;
+double wR_set = 10, wL_set = 0.5;
 double distance = 0;
 double w_p_ratio = 901/12500;
 double toc_last = 0.0;
@@ -25,10 +27,39 @@ const double kd_distance = 1.8;
 double errordistance_sum = 0, errordistance_prev = 0;
 //..........................................................................................................
 
+
+
+//class Encoder : public ESP32Encoder
+//{
+//  private:
+//    float angularSpeed;
+//    Ticker speedSampler;
+//    void sampleSpeed() {
+//      angularSpeed = (getCount()/1632.67)/100; //sampling interval of 100us, 1632.67 counts per revolution (according to manufacturer)
+//    }
+//  public:
+//    Encoder(int pinA, int pinB) { //constructor
+//      attachFullQuad(pinA, pinB);
+//      //speedSampler(callback(this, &Encoder::sampleSpeed), 100) //sampling at 100us
+//      enable();
+//    }
+//    float getAngularSpeed() {
+//      return angularSpeed;
+//    }
+//    void enable() {
+//      
+//    }
+//    void disable() {
+//      angularSpeed = 0;
+//    }
+//  
+//};
+
 void setup()
 {
 
   EncR.attachFullQuad(34, 36);
+  EncL.attachFullQuad(39, 35);
   //initialising PWM........................................................................................
   rmotor.SetMotorType(DC_MOTOR);            // dc brushed motor
   rmotor.SetBaseFreq(5000);                 // pwm base frequency
@@ -49,20 +80,24 @@ void loop()
   toc_last = toc;
   
   float EncR_Speed = (EncR.getCount()/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
-  float EncL_Speed = (EncR.getCount()/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
+  float EncL_Speed = (EncL.getCount()/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
   EncR.clearCount();
   EncL.clearCount(); //force this into a class, EncL_Speed should be a member access function instead, e.g. use EncL.getSpeed()
 
+
+  float linearVelocity_left = EncL_Speed *0.05; //v=wr
+  float linearVelocity_right = EncR_Speed *0.05; //v=wr
+  float averageVelocity = (linearVelocity_left + linearVelocity_right)/2.0;
   
-  Serial.println(EncR_Speed, 5);
-//  double forwardSpeed = (EncR.Get_Speed()+EncL.Get_speed())/2;
+  //Right wheel controller...................................................................................
+  float errorspeedright = wR_set - EncR_Speed;
+  errorspeedright_sum += errorspeedright;
+  float uR = (wR_set + (errorspeedright * kp_speed) + (ki_speed * errorspeedright_sum * dt) + ((kd_speed*(errorspeedright-errorspeedright_prev))/dt))/w_p_ratio;
+  errorspeedright_prev = errorspeedright;
+  //.........................................................................................................
   
-  if (distance < 3) {     //stops running after 3 metres, to imitate TD1 task 5
-    
-  } else {
-    wR_set = 0;
-    wL_set = 0;
-  }
-  lmotor.MotorWrite(wL_set);
-  rmotor.MotorWrite(wR_set);
+  Serial.println(uR, 6);
+
+  //lmotor.MotorWrite(-wL_set);
+  rmotor.MotorWrite(-uR);
 }
