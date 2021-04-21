@@ -8,7 +8,7 @@ MotorDriver rmotor, lmotor; //DISCONNECT POWER CONNECTOR FROM LINE SENSOR BEFORE
 ESP32Encoder EncR;
 ESP32Encoder EncL;
 
-double wR_set = 1, wL_set = 0.1;
+double wR_set = 1, wL_set = 1;
 double distance = 0;
 double w_p_ratio = 901/12500;
 double toc_last = 0.0;
@@ -76,7 +76,7 @@ void setup()
 void loop()
 {
   double toc = micros()/1000000.0;
-  double dt = toc - toc_last;
+  double dt = 1.0/1000; //toc - toc_last;
   toc_last = toc;
   
   float EncR_Speed = (EncR.getCount()/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
@@ -92,20 +92,20 @@ void loop()
   //Right wheel controller...................................................................................
   float errorspeedright = wR_set - EncR_Speed;
   errorspeedright_sum += errorspeedright;
-  float uR = (wR_set + (errorspeedright * kp_speed) + (ki_speed * errorspeedright_sum * dt) + ((kd_speed*(errorspeedright-errorspeedright_prev))/dt))/w_p_ratio;
+  float uR = (wR_set + (errorspeedright * kp_speed) + (ki_speed * errorspeedright_sum * dt) + ((kd_speed*(errorspeedright-errorspeedright_prev))/dt));
   errorspeedright_prev = errorspeedright;
   //.........................................................................................................
 
   //Left wheel controller...................................................................................
   float errorspeedleft = wL_set - EncL_Speed;
   errorspeedleft_sum += errorspeedleft;
-  float uL = (wL_set + (errorspeedleft * kp_speed) + (ki_speed * errorspeedleft_sum * dt) + ((kd_speed*(errorspeedleft-errorspeedleft_prev))/dt))/w_p_ratio;
+  float uL = (wL_set + (errorspeedleft * kp_speed) + (ki_speed * errorspeedleft_sum * dt) + ((kd_speed*(errorspeedleft-errorspeedleft_prev))/dt));
   errorspeedleft_prev = errorspeedleft;
   //.........................................................................................................
   
   //Serial.println(uR, 6);
 
-  delay(5); //obviously change this to work with a ticker
+  delay(1); //obviously change this to work with a ticker
 
   lmotor.MotorWrite(-uL);
   rmotor.MotorWrite(-uR);
