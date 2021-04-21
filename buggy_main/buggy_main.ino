@@ -8,7 +8,7 @@ MotorDriver rmotor, lmotor; //DISCONNECT POWER CONNECTOR FROM LINE SENSOR BEFORE
 ESP32Encoder EncR;
 ESP32Encoder EncL;
 
-double wR_set = 10, wL_set = 0.5;
+double wR_set = 1, wL_set = 0.1;
 double distance = 0;
 double w_p_ratio = 901/12500;
 double toc_last = 0.0;
@@ -38,8 +38,8 @@ double errordistance_sum = 0, errordistance_prev = 0;
 //      angularSpeed = (getCount()/1632.67)/100; //sampling interval of 100us, 1632.67 counts per revolution (according to manufacturer)
 //    }
 //  public:
-//    Encoder(int pinA, int pinB) { //constructor
-//      attachFullQuad(pinA, pinB);
+//    Encoder(int encA, int encB) { //constructor
+//      attachFullQuad(encA, encB);
 //      //speedSampler(callback(this, &Encoder::sampleSpeed), 100) //sampling at 100us
 //      enable();
 //    }
@@ -84,10 +84,10 @@ void loop()
   EncR.clearCount();
   EncL.clearCount(); //force this into a class, EncL_Speed should be a member access function instead, e.g. use EncL.getSpeed()
 
-
-  float linearVelocity_left = EncL_Speed *0.05; //v=wr
-  float linearVelocity_right = EncR_Speed *0.05; //v=wr
-  float averageVelocity = (linearVelocity_left + linearVelocity_right)/2.0;
+//
+//  float linearVelocity_left = EncL_Speed *0.05; //v=wr
+//  float linearVelocity_right = EncR_Speed *0.05; //v=wr
+//  float averageVelocity = (linearVelocity_left + linearVelocity_right)/2.0;
   
   //Right wheel controller...................................................................................
   float errorspeedright = wR_set - EncR_Speed;
@@ -95,9 +95,18 @@ void loop()
   float uR = (wR_set + (errorspeedright * kp_speed) + (ki_speed * errorspeedright_sum * dt) + ((kd_speed*(errorspeedright-errorspeedright_prev))/dt))/w_p_ratio;
   errorspeedright_prev = errorspeedright;
   //.........................................................................................................
-  
-  Serial.println(uR, 6);
 
-  //lmotor.MotorWrite(-wL_set);
+  //Left wheel controller...................................................................................
+  float errorspeedleft = wL_set - EncL_Speed;
+  errorspeedleft_sum += errorspeedleft;
+  float uL = (wL_set + (errorspeedleft * kp_speed) + (ki_speed * errorspeedleft_sum * dt) + ((kd_speed*(errorspeedleft-errorspeedleft_prev))/dt))/w_p_ratio;
+  errorspeedleft_prev = errorspeedleft;
+  //.........................................................................................................
+  
+  //Serial.println(uR, 6);
+
+  delay(5); //obviously change this to work with a ticker
+
+  lmotor.MotorWrite(-uL);
   rmotor.MotorWrite(-uR);
 }
