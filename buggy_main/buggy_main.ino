@@ -12,6 +12,7 @@ ESP32Encoder EncL;
 float wR_set = 0, wL_set = 0;
 float w_p_ratio = 901/12500;
 float toc_last = 0.0;
+int EncR_lastCount = 0, EncL_lastCount = 0;
 
 //PID coefficients for motor control......................................................................
 float dt_millis = 1;
@@ -50,27 +51,29 @@ const float kd_speed = 0.012;
 
 void setSpeeds() 
 {
-  float EncR_Speed = (EncR.getCount()/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
-  float EncL_Speed = (EncL.getCount()/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
-  EncR.clearCount();
-  EncL.clearCount(); //force this into a class, EncL_Speed should be a member access function instead, e.g. use EncL.getSpeed()
   
   //Right wheel controller...................................................................................
+  float EncR_Speed = ((EncR.getCount()-EncR_lastCount)/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
+  EncR_lastCount = EncR.getCount();
   float errorspeedright = wR_set - EncR_Speed;
   errorspeedright_sum += errorspeedright;
   float uR = (wR_set + (errorspeedright * kp_speed) + (ki_speed * errorspeedright_sum * dt) + ((kd_speed*(errorspeedright-errorspeedright_prev))/dt));
   errorspeedright_prev = errorspeedright;
+  //EncR.clearCount();
   //.........................................................................................................
 
   //Left wheel controller...................................................................................
+  float EncL_Speed = ((EncL.getCount()-EncR_lastCount)/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
+  EncL_lastCount = EncL.getCount();
   float errorspeedleft = wL_set - EncL_Speed;
   errorspeedleft_sum += errorspeedleft;
   float uL = (wL_set + (errorspeedleft * kp_speed) + (ki_speed * errorspeedleft_sum * dt) + ((kd_speed*(errorspeedleft-errorspeedleft_prev))/dt));
   errorspeedleft_prev = errorspeedleft;
+  //EncL.clearCount();
   //.........................................................................................................
 
-  lmotor.MotorWrite(-uL);
   rmotor.MotorWrite(-uR);
+  lmotor.MotorWrite(-uL);
 }
 
 Ticker innerloop;
