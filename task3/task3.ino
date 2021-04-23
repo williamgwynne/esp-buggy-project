@@ -58,7 +58,7 @@ void loop()
   for (int i = 0; i < 6; i++)
   {
     lineSensor[i] = sensor.GetSensorValues(i);
-    lineSensor_bool[i] = -(float)lineSensor[i] / 2500;
+    lineSensor_bool[i] = -lineSensor[i] / 2500.0;
     flag_lineSensor = (lineSensor_bool[i] > 0) ? 1 : flag_lineSensor;
   }
 

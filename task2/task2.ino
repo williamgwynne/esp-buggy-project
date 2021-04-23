@@ -9,13 +9,13 @@ MotorDriver rmotor, lmotor; //DISCONNECT POWER CONNECTOR FROM LINE SENSOR BEFORE
 ESP32Encoder EncR;
 ESP32Encoder EncL;
 
-float wR_set = 0, wL_set = 0;
+float wR_set = 1, wL_set = 1;
 float w_p_ratio = 901/12500;
 float toc_last = 0.0;
 int EncR_lastCount = 0, EncL_lastCount = 0;
 
 //PID coefficients for motor control......................................................................
-float dt_millis = 1;
+float dt_millis = 50;
 float dt = dt_millis/1000.0;
 float errorspeedright_prev = 0, errorspeedleft_prev = 0, errorspeedright_sum = 0, errorspeedleft_sum = 0;
 const float kp_speed = 0.3;
