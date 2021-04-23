@@ -63,7 +63,7 @@ void setSpeeds()
   //.........................................................................................................
 
   //Left wheel controller...................................................................................
-  float EncL_Speed = ((EncL.getCount()-EncR_lastCount)/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
+  float EncL_Speed = ((EncL.getCount()-EncL_lastCount)/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
   EncL_lastCount = EncL.getCount();
   float errorspeedleft = wL_set - EncL_Speed;
   errorspeedleft_sum += errorspeedleft;
