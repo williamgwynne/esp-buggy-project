@@ -67,8 +67,22 @@ void loop()
     pose_line = 0;
     for (int i = 0; i < 6; i++)
       pose_line += pose_line_weight[i] * lineSensor_bool[i];
-    wr_set = w_desired + pid_line.Cal(0, pose_line);
-    wl_set = w_desired - pid_line.Cal(0, pose_line);
+
+    float wr_ratio, wl_ratio;
+
+    if (pose_line <0.5) {
+      wr_ratio = 1;
+      wl_ratio = 0.5;
+    } else if (pose_line>0.5) {
+      wr_ratio = 0.5;
+      wl_ratio = 1;
+    } else {
+      wr_ratio = 1;
+      wl_ratio = 1;
+    }
+      
+    wr_set = w_desired * wr_ratio;
+    wl_set = w_desired * wl_ratio;
   }
   else
   {
@@ -76,14 +90,16 @@ void loop()
     wl_set = w_desired;
   }
 
-  ur = ur + pid_mr.Cal(wr_set, wr);
-  ul = ul + pid_ml.Cal(wl_set, wl);
+//  ur = ur + pid_mr.Cal(wr_set, wr);
+//  ul = ul + pid_ml.Cal(wl_set, wl);
+//
+//  ur = (abs(ur) > 1.0) ? (ur / abs(ur)) : ur;
+//  ul = (abs(ul) > 1.0) ? (ul / abs(ul)) : ul;
+//
+  Mr.MotorWrite(wr_set); //Set Velocity percentage to the Motors (-1 to 1)
+  Ml.MotorWrite(wl_set);
 
-  ur = (abs(ur) > 1.0) ? (ur / abs(ur)) : ur;
-  ul = (abs(ul) > 1.0) ? (ul / abs(ul)) : ul;
 
-  Mr.MotorWrite(ur); //Set Velocity percentage to the Motors (-1 to 1)
-  Ml.MotorWrite(ul);
 
   delay(30); //Delay before next loop iteration
 }
