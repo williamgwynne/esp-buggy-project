@@ -2,6 +2,7 @@
 #include "MotorDriver.h"
 #include "Ticker.h"
 #include "ESP32Encoder.h"
+#include "math.h"
 
 // Callback function header
 void callback(char* topic, byte* payload, unsigned int length);
@@ -61,20 +62,21 @@ public:
   }
   void adjustSpeed() //ISR, if possible attach to a ticker within this class and move to private
   {
-    float encoder_speed = ((getCount()-encoder_lastCount)/1632.67)/dt; //1632.67 counts per revolution according to manufacturer
+    float encoder_speed = (((getCount()-encoder_lastCount)/1632.67)*2*M_PI)/dt; //1632.67 counts per revolution according to manufacturer
     float errorSpeed = w_set - encoder_speed;
     errorSpeed_sum += errorSpeed;
     float u = (w_set + (errorSpeed * kp) + (ki * errorSpeed_sum * dt) + ((kd*(errorSpeed-errorSpeed_prev))/dt));
     errorSpeed_prev = errorSpeed;
     encoder_lastCount = getCount();
-    MotorWrite(-u/2.37); //max speed = 2.37 rads/s
+    MotorWrite(-u/14.93); //max angular speed = ~14.93 rads/s
   }
   void setAngularSpeed(float angularSpeed)
   {
-    w_set = angularSpeed;
+    w_set = angularSpeed; //max angular speed = ~14.93 rads/s
   }
   void setLinearSpeed(float linearSpeed)
   {
+    //max linear speed = 0.7456m/s
     w_set = linearSpeed/0.05; //w=v/r
   }
 };
