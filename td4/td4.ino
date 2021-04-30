@@ -19,7 +19,7 @@ void setup()
 {
   Serial.begin(9600);
   updateMotorSpeeds.attach_ms(dt_millis, &adjustSpeeds);
-  right_motor.setAngularSpeed(10); //max speed =~2.37 rads/s
+  right_motor.setAngularSpeed(10); //max speed = ~14.93 rads/s
   left_motor.setAngularSpeed(10);
 }
 
