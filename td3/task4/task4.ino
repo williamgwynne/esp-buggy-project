@@ -18,11 +18,11 @@ void loop() {
   // put your main code here, to run repeatedly:
   pinMode (signalPin, OUTPUT);
   digitalWrite(signalPin, HIGH);
-  delayMicroseconds(2);
+  delayMicroseconds(10);
   digitalWrite(signalPin, LOW);
   pinMode (signalPin, INPUT);
   delayMicroseconds(10);
-  duration = pulseIn(signalPin, HIGH);
+  duration = pulseIn(signalPin, HIGH, 18000);
   distance= duration*0.034/2;
   Serial.print("Distance: ");
   Serial.println(distance);

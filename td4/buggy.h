@@ -4,9 +4,6 @@
 #include "ESP32Encoder.h"
 #include "math.h"
 
-// Callback function header
-void callback(char* topic, byte* payload, unsigned int length);
-
 class Sonar
 {
 private:
@@ -15,9 +12,31 @@ private:
 	int signalPin;
 public:
 	Sonar(int sigpin) : signalPin(sigpin) {}
+//  void getPulse() //ISR
+//  {
+//    
+//  }
+//  void sendPulse() //ISR
+//  {
+//    pinMode(signalPin, OUTPUT);
+//    digitalWrite(signalPin, HIGH);
+//    delayMicroseconds(2); //very small time, perhaps try to change to ticker in some way
+//    digitalWrite(signalPin, LOW);
+//    pinMode(signalPin, INPUT);
+//  }
 	float getDist() 
 	{
-		
+    pinMode (signalPin, OUTPUT);
+    digitalWrite(signalPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(signalPin, LOW);
+    pinMode (signalPin, INPUT);
+    delayMicroseconds(10);
+    duration = pulseIn(signalPin, HIGH, 18000);
+    distance = duration*0.034/2;
+    //Serial.print("Distance: ");
+    Serial.println(distance);
+		return distance;
 	}
 };
 
@@ -39,7 +58,7 @@ public:
 class Motor : private MotorDriver, private ESP32Encoder //includes code for both motor and encoder
 {
 private:
-const float kp = 0.3;
+const float kp = 0.3; //PID coefficients are wrong for slow speeds
 const float ki = 0.001;
 const float kd = 0.012;
 float w_set;
@@ -63,12 +82,13 @@ public:
   void adjustSpeed() //ISR, if possible attach to a ticker within this class and move to private
   {
     float encoder_speed = (((getCount()-encoder_lastCount)/1632.67)*2*M_PI)/dt; //1632.67 counts per revolution according to manufacturer
+    //Serial.println(encoder_speed);
     float errorSpeed = w_set - encoder_speed;
     errorSpeed_sum += errorSpeed;
     float u = (w_set + (errorSpeed * kp) + (ki * errorSpeed_sum * dt) + ((kd*(errorSpeed-errorSpeed_prev))/dt));
     errorSpeed_prev = errorSpeed;
     encoder_lastCount = getCount();
-    MotorWrite(-u/14.93); //max angular speed = ~14.93 rads/s
+    MotorWrite(-u/14.93); //max angular speed = ~14.93 rads/s, converts to PWM output -1 .. +1
   }
   void setAngularSpeed(float angularSpeed)
   {
