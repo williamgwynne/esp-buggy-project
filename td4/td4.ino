@@ -2,7 +2,6 @@
 #include "Arduino.h"
 #include "buggy.h"
 #include "Ticker.h"
-#include "ESP32Servo.h"
 
 const int dt_millis = 100;
 float sonarDist;
@@ -35,7 +34,6 @@ void setup()
   //sendPulses.attach_ms(dt_millis, &getSonarDist); //only uncommmented so LED didn't annoy me
   right_motor.setAngularSpeed(0); //max speed = ~14.93 rads/s
   left_motor.setAngularSpeed(0);
-  servo.attach(5);
 }
 
 void loop()
