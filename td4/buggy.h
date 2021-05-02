@@ -97,19 +97,28 @@ public:
 class Buggy
 {
 private:
+uint8_t SensorPins[7] = {21, 23, 22, 19, 27, 25, 32}; 
 public:
-  Servo servo;
-  Motor leftMotor;
-  Motor rightMotor;
+  Servo servo; //pwm channel=0
+  Motor left_motor;
+  Motor right_motor;
   Sonar sonar;
   ReflectanceSensor lineSensor;
 
   Buggy(int dt_millis) : //Pins are set up in this constructor, change pins to corresponding ones on buggy if need be
     sonar(14), //signal pin 14
-    rightMotor(4, 2, 15, 18, 34, 36, dt_millis), //PWM pin=4, PWM channel=2, PinA=15, PinB=18, EncA=34, EncB=36
-    leftMotor(2, 1, 12, 0, 39, 35, dt_millis), //PWM pin=2, PWM channel=1, PinA=12, PinB=0, EncA=39, EncB=35
+    left_motor(2, 2, 12, 0, 39, 35, dt_millis), //PWM pin=2, PWM channel=1, PinA=12, PinB=0, EncA=39, EncB=35
+    right_motor(4, 3, 15, 18, 34, 36, dt_millis), //PWM pin=4, PWM channel=2, PinA=15, PinB=18, EncA=34, EncB=36
     lineSensor() //use the pins as per the TD4 setup, perhaps set up a different class to grab line error and such
   {
     servo.attach(5); //signal pin 5
+    lineSensor.SetTimeout(2500);
+    lineSensor.SetSensorPins(SensorPins, 7);  
+  }
+
+  void adjustSpeeds()
+  {
+    left_motor.adjustSpeed();
+    right_motor.adjustSpeed();
   }
 };
