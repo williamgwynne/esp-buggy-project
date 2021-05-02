@@ -3,6 +3,7 @@
 #include "Ticker.h"
 #include "ESP32Encoder.h"
 #include "math.h"
+#include "analogWrite.h"
 
 class Sonar
 {
@@ -12,46 +13,36 @@ private:
 	int signalPin;
 public:
 	Sonar(int sigpin) : signalPin(sigpin) {}
-//  void getPulse() //ISR
-//  {
-//    
-//  }
-//  void sendPulse() //ISR
-//  {
-//    pinMode(signalPin, OUTPUT);
-//    digitalWrite(signalPin, HIGH);
-//    delayMicroseconds(2); //very small time, perhaps try to change to ticker in some way
-//    digitalWrite(signalPin, LOW);
-//    pinMode(signalPin, INPUT);
-//  }
-	float getDist() 
+  float getDist()
 	{
     pinMode (signalPin, OUTPUT);
-    digitalWrite(signalPin, HIGH);
-    delayMicroseconds(10);
+    digitalWrite(signalPin, HIGH); //start pulse
+    delayMicroseconds(10); //perhaps implement ticker in some way
     digitalWrite(signalPin, LOW);
     pinMode (signalPin, INPUT);
     delayMicroseconds(10);
-    duration = pulseIn(signalPin, HIGH, 18000);
+    duration = pulseIn(signalPin, HIGH, 18000); //wait for pulse, timeout after 18000us (stops the program waiting for too long, can be adjusted for shorter equivalet distance)
     distance = duration*0.034/2;
     //Serial.print("Distance: ");
-    Serial.println(distance);
+    //Serial.println(distance);
 		return distance;
 	}
 };
 
-class Servo_
+class Servo_ //: private Servo
 {
 private:
+int servoPin;
 public:
-  Servo_(int pin)
+  Servo_(int pin) : servoPin(pin)
   {
     //pinMode(pin, OUTPUT);
-    
+//    attach(pin);
   }
-  void setAngle(int angle)
+  void setAngle(int servoAngle)
   {
-    
+    //analogWrite(servoPin, servoAngle);
+//    write(servoAngle);
   }
 };
 
