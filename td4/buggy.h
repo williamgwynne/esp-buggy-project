@@ -25,27 +25,10 @@ public:
     delayMicroseconds(10);
     duration = pulseIn(signalPin, HIGH, 18000); //wait for pulse, timeout after 18000us (stops the program waiting for too long, can be adjusted for shorter equivalet distance)
     distance = duration*0.034/2;
-    //Serial.print("Distance: ");
-    //Serial.println(distance);
+//    Serial.print("Distance: ");
+//    Serial.println(distance);
 		return distance;
 	}
-};
-
-class Servo_ //: private Servo
-{
-private:
-int servoPin;
-public:
-  Servo_(int pin) : servoPin(pin)
-  {
-    //pinMode(pin, OUTPUT);
-//    attach(pin);
-  }
-  void setAngle(int servoAngle)
-  {
-    //analogWrite(servoPin, servoAngle);
-//    write(servoAngle);
-  }
 };
 
 class Motor : private MotorDriver, private ESP32Encoder //includes code for both motor and encoder
@@ -137,49 +120,53 @@ public:
     float wr_set, wl_set;
     int pose_line_weight[7] = {-4, -2, -1, 0, 1, 2, 4};
     
-  
-    flag_lineSensor = 0;
-    lineSensor.ReadSensor(); // Read one full set of sensor values
-  
-    for (int i = 0; i < 7; i++)
-    {
-      sensorVals[i] = lineSensor.GetSensorValues(i);
-      lineSensor_bool[i] = -(float)sensorVals[i] / 2500.0;
-      //Serial.println(lineSensor[i]);
-      if (sensorVals[i]<1700)
-        flag_lineSensor = 1;   
-    }
-  
-    if (flag_lineSensor)
-    {
-      pose_line = 0;
+    if(w_desired != 0) {
+      flag_lineSensor = 0;
+      lineSensor.ReadSensor(); // Read one full set of sensor values
+    
       for (int i = 0; i < 7; i++)
-        pose_line += pose_line_weight[i] * lineSensor_bool[i];
-      
+      {
+        sensorVals[i] = lineSensor.GetSensorValues(i);
+        lineSensor_bool[i] = -(float)sensorVals[i] / 2500.0;
+        //Serial.println(lineSensor[i]);
+        if (sensorVals[i]<1700)
+          flag_lineSensor = 1;   
+      }
+    
+      if (flag_lineSensor)
+      {
+        pose_line = 0;
+        for (int i = 0; i < 7; i++)
+          pose_line += pose_line_weight[i] * lineSensor_bool[i];
+        
+    
+        
+        error = 0 - pose_line;
+        output_p = kp * error;
+        output_i += ki * lineError_sum * dt;
+        output_d = kd * (error - lineError_prev) / dt;
+        output = output_p + output_i + output_d;
+        lineError_prev = error;
   
-      
-      error = 0 - pose_line;
-      output_p = kp * error;
-      output_i += ki * lineError_sum * dt;
-      output_d = kd * (error - lineError_prev) / dt;
-      output = output_p + output_i + output_d;
-      lineError_prev = error;
-
-      Serial.println(error);
-
-       
-      wr_set = w_desired + output;//w_desired;
-      wl_set = w_desired - output;//w_desired;
-      //Serial.println(wr_set);
-      right_motor.setAngularSpeed(wr_set); //max speed = ~14.93 rads/s
-      left_motor.setAngularSpeed(wl_set);
-    }
-    else
-    {
-      wr_set = w_desired; //change this to log previous ratios and go at average velocity, rather than straight ahead
-      wl_set = w_desired;
-      right_motor.setAngularSpeed(wr_set); //max speed = ~14.93 rads/s
-      left_motor.setAngularSpeed(wl_set);
+        //Serial.println(error);
+  
+         
+        wr_set = w_desired + output;//w_desired;
+        wl_set = w_desired - output;//w_desired;
+        //Serial.println(wr_set);
+        right_motor.setAngularSpeed(wr_set); //max speed = ~14.93 rads/s
+        left_motor.setAngularSpeed(wl_set);
+      }
+      else
+      {
+        wr_set = w_desired; //change this to log previous ratios and go at average velocity, rather than straight ahead
+        wl_set = w_desired;
+        right_motor.setAngularSpeed(wr_set); //max speed = ~14.93 rads/s
+        left_motor.setAngularSpeed(wl_set);
+      }
+    } else {
+      right_motor.setAngularSpeed(0); //max speed = ~14.93 rads/s
+      left_motor.setAngularSpeed(0);
     }
   }
 
