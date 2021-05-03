@@ -3,7 +3,6 @@
 #include "ReflectanceSensor.h"
 #include "Ticker.h"
 #include "ESP32Encoder.h"
-#include "math.h"
 #include "analogWrite.h"
 #include "ESP32Servo.h"
 
@@ -75,20 +74,26 @@ public:
     //max linear speed = 0.7456m/s
     w_set = linearSpeed/0.05; //w=v/r
   }
+  void stop_()
+  {
+    MotorWrite(0);
+  }
 };
 
 class Buggy
 {
 private:
-uint8_t SensorPins[7] = {21, 23, 22, 19, 27, 25, 32}; 
-public:
+  uint8_t SensorPins[7] = {21, 23, 22, 19, 27, 25, 32}; 
   const float kp = 3;
   const float ki = 1.5;
   const float kd = 0.1;
+  float time_off_line;
+public:
   float lineError_sum, lineError_prev;
   float w_desired;
   Servo servo; //pwm channel=0
   int dt_millis;
+  bool stop_;
   Motor left_motor;
   Motor right_motor;
   Sonar sonar;
@@ -107,6 +112,8 @@ public:
     lineError_sum = 0;
     lineError_prev = 0;
     w_desired = 10;
+    stop_=0;
+    time_off_line = 0;
   }
 
   void followLine()
@@ -119,6 +126,7 @@ public:
     float error, output_p, output_i, output_d, output;
     float wr_set, wl_set;
     int pose_line_weight[7] = {-4, -2, -1, 0, 1, 2, 4};
+    
     
     if(w_desired != 0) {
       flag_lineSensor = 0;
@@ -139,7 +147,7 @@ public:
         for (int i = 0; i < 7; i++)
           pose_line += pose_line_weight[i] * lineSensor_bool[i];
         
-    
+        time_off_line = 0;
         
         error = 0 - pose_line;
         output_p = kp * error;
@@ -163,10 +171,14 @@ public:
         wl_set = w_desired;
         right_motor.setAngularSpeed(wr_set); //max speed = ~14.93 rads/s
         left_motor.setAngularSpeed(wl_set);
+        if(time_off_line>500) //if buggy has been off the track for more than 1/2 second, stop the simulation
+          stop_=1;
+        time_off_line+=dt_millis;
       }
     } else {
       right_motor.setAngularSpeed(0); //max speed = ~14.93 rads/s
       left_motor.setAngularSpeed(0);
+      
     }
   }
 

@@ -36,6 +36,20 @@ void turnAround()
   lineFollow.attach_ms(dt_millis, &followLine);
 }
 
+void stopRunning()
+{
+  updateMotorSpeeds.detach();
+  sendPulses.detach();
+  lineFollow.detach();
+  delay(dt_millis);
+  buggy.left_motor.stop_();
+  buggy.right_motor.stop_();
+  while (true)
+  {
+    //infinite loop
+  }
+}
+
 void setup()
 {
   Serial.begin(9600);
@@ -57,11 +71,14 @@ void loop()
   float proportionalDist = errorDistance * kp_dist;
   float differentialDist = kd_dist*(errorDistance - errorDistance_prev)/dt;
   float w_desired = ((proportionalDist + differentialDist)/dt)/0.05;
+
+  if(buggy.stop_)
+    stopRunning();
   
-  if (w_desired>10)
+  if (w_desired>9) //9 is a cautionary speed, set a higher one for 2nd submission
   {
     time_still=0;
-    w_desired = 10;
+    w_desired = 9;
   }
   else if (w_desired<0)
   {
@@ -73,4 +90,5 @@ void loop()
   errorDistance_prev = errorDistance;
   buggy.w_desired = w_desired;
   delay(dt_millis);
+  
 }

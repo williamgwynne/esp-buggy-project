@@ -1,0 +1,1 @@
+External .ZIP libraries used in this project are included in the external_libraries folder
