@@ -24,8 +24,6 @@ public:
     delayMicroseconds(10);
     duration = pulseIn(signalPin, HIGH, 18000); //wait for pulse, timeout after 18000us (stops the program waiting for too long, can be adjusted for shorter equivalet distance)
     distance = duration*0.034/2;
-//    Serial.print("Distance: ");
-//    Serial.println(distance);
 		return distance;
 	}
 };
@@ -33,7 +31,7 @@ public:
 class Motor : private MotorDriver, private ESP32Encoder //includes code for both motor and encoder
 {
 private:
-const float kp = 0.3; //PID coefficients are wrong for slow speeds
+const float kp = 0.3;
 const float ki = 0.001;
 const float kd = 0.012;
 float w_set;
