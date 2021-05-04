@@ -32,7 +32,7 @@ class Motor : private MotorDriver, private ESP32Encoder //includes code for both
 {
 private:
 const float kp = 1.02;
-const float ki = 13.6;
+const float ki = 11.6;
 const float kd = 0.051;
 float w_set;
 int encoderA, encoderB;
@@ -55,7 +55,7 @@ public:
   void adjustSpeed() //ISR, if possible attach to a ticker within this class and move to private
   {
     float encoder_speed = (((getCount()-encoder_lastCount)/1632.67)*2*M_PI)/dt; //1632.67 counts per revolution according to manufacturer
-    //Serial.println(encoder_speed);
+    Serial.println(encoder_speed);
     float errorSpeed = w_set - encoder_speed;
     errorSpeed_sum += errorSpeed;
     float u = (w_set + (errorSpeed * kp) + (ki * errorSpeed_sum * dt) + ((kd*(errorSpeed-errorSpeed_prev))/dt));
@@ -66,11 +66,12 @@ public:
   void setAngularSpeed(float angularSpeed)
   {
     w_set = angularSpeed; //max angular speed = ~14.93 rads/s
+    errorSpeed_sum=0;
   }
   void setLinearSpeed(float linearSpeed)
   {
     //max linear speed = 0.7456m/s
-    w_set = linearSpeed/0.05; //w=v/r
+    setAngularSpeed(linearSpeed/0.05); //w=v/r
   }
   void stop_()
   {

@@ -32,7 +32,7 @@ void turnAround()
   lineFollow.detach(); //stops following the line whilst the buggy turns around
   buggy.left_motor.setAngularSpeed(5);
   buggy.right_motor.setAngularSpeed(-5);
-  delay(1800);
+  delay(1300);
   lineFollow.attach_ms(dt_millis, &followLine);
 }
 
@@ -75,7 +75,7 @@ void loop()
   if(buggy.stop_)
     stopRunning();
   
-  if (w_desired>9) //9 is a cautionary speed, set a higher one for 2nd submission
+  if (w_desired>12) //9 is a cautionary speed, set a higher one for 2nd submission
   {
     time_still=0;
     w_desired = 9;
