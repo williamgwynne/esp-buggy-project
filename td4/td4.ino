@@ -50,7 +50,7 @@ void stopRunning()
   int tol = 0;
   int flag_lineSensor = 0;
   uint32_t sensorVals[7];
-  while (tol<1000)
+  while (tol<500)
   {
     flag_lineSensor = 0;
     buggy.lineSensor.ReadSensor();
