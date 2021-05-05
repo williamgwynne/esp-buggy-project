@@ -68,30 +68,33 @@ float time_still=0;
 void loop()
 {
   float kp_dist = 0.001; //tuned for max. angular speed of 8 rads/sec, stopping distance of 10cm. To change speed, P values need changing
-  
-  float errorDistance = sonarDist - 15; //steady state of 15cm
-
-
-  //Proportional-only ontroller as uncertainty from suddenly changing error values can cause serious issues
-  float w_desired = ((errorDistance * kp_dist)/dt)/0.05;
-
-  if(buggy.stop_)
-    stopRunning();
-  
-  if (w_desired>8) //9 is a cautionary speed, set a higher one for 2nd submission
+  float w_desired;
+  if (sonarDist > 0) //to cancel out error where no value is returned
   {
-    time_still=0;
-    w_desired = 8;
+    float errorDistance = sonarDist - 15; //steady state of 15cm
+    //Proportional-only ontroller as uncertainty from suddenly changing error values can cause serious issues
+    w_desired = ((errorDistance * kp_dist)/dt)/0.05;
+  
+    if(buggy.stop_)
+      stopRunning();
+    
+    if (w_desired>8) //9 is a cautionary speed, set a higher one for 2nd submission
+    {
+      time_still=0;
+      w_desired = 8;
+    }
+    else if (w_desired<1.5) //trapping slow speeds
+    {
+      if (w_desired<0)
+        w_desired = 0;
+      if (time_still > 500) //after 500ms staying still, buggy turns round, reduces error
+        turnAround();
+      time_still+=dt_millis;
+    }
+    errorDistance_prev = errorDistance;
   }
-  else if (w_desired<1.5) //trapping slow speeds
-  {
-//    if (w_desired<0)
-//      w_desired = 0;
-    if (time_still > 500) //after 500ms staying still, buggy turns round, reduces error
-      turnAround();
-    time_still+=dt_millis;
-  }
-  errorDistance_prev = errorDistance;
+  else
+    w_desired = 9;
   buggy.w_desired = w_desired;
   delay(dt_millis);
   
