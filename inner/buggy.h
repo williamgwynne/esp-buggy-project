@@ -31,9 +31,9 @@ public:
 class Motor : private MotorDriver, private ESP32Encoder //includes code for both motor and encoder
 {
 private:
-const float kp = 0.05;
-const float ki = 0.56;
-const float kd = 0.006;
+const float kp = 1.02;
+const float ki = 13.6;
+const float kd = 0.051;
 float w_set;
 int encoderA, encoderB;
 ESP32Encoder encoder;
@@ -136,7 +136,7 @@ public:
         sensorVals[i] = lineSensor.GetSensorValues(i);
         lineSensor_bool[i] = -(float)sensorVals[i] / 2500.0;
         Serial.println(sensorVals[i]);
-        if (sensorVals[i]<1600)
+        if (sensorVals[i]<1250)
           flag_lineSensor = 1;   
       }
     

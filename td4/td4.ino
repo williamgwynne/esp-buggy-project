@@ -29,11 +29,14 @@ void followLine() //ISR
 
 void turnAround()
 {
-  lineFollow.detach(); //stops following the line whilst the buggy turns around
-  buggy.left_motor.setAngularSpeed(5);
-  buggy.right_motor.setAngularSpeed(-5);
-  delay(1300);
-  lineFollow.attach_ms(dt_millis, &followLine);
+  if (millis() > 5000) //stops accidental turnaround at beginning
+  {
+    lineFollow.detach(); //stops following the line whilst the buggy turns around
+    buggy.left_motor.setAngularSpeed(5);
+    buggy.right_motor.setAngularSpeed(-5);
+    delay(1500);
+    lineFollow.attach_ms(dt_millis, &followLine);
+  }
 }
 
 void stopRunning()
@@ -64,9 +67,9 @@ float time_still=0;
 
 void loop()
 {
-  float kp_dist = 0.0025; //tuned for max. angular speed of 9 rads/sec, stopping distance of 10cm. To change speed, P values need changing
+  float kp_dist = 0.001; //tuned for max. angular speed of 8 rads/sec, stopping distance of 10cm. To change speed, P values need changing
   
-  float errorDistance = sonarDist - 20; //steady state of 0cm
+  float errorDistance = sonarDist - 15; //steady state of 15cm
 
 
   //Proportional-only ontroller as uncertainty from suddenly changing error values can cause serious issues
@@ -75,14 +78,15 @@ void loop()
   if(buggy.stop_)
     stopRunning();
   
-  if (w_desired>9) //9 is a cautionary speed, set a higher one for 2nd submission
+  if (w_desired>8) //9 is a cautionary speed, set a higher one for 2nd submission
   {
     time_still=0;
-    w_desired = 9;
+    w_desired = 8;
   }
   else if (w_desired<1.5) //trapping slow speeds
   {
-    w_desired = 0;
+//    if (w_desired<0)
+//      w_desired = 0;
     if (time_still > 500) //after 500ms staying still, buggy turns round, reduces error
       turnAround();
     time_still+=dt_millis;
