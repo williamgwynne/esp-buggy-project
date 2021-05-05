@@ -33,10 +33,14 @@ void followLine() //ISR
 
 void turnAround()
 {
+  buggy.left_motor.stop_(); //sets speed to 0 and clears I & D components
+  buggy.right_motor.stop_();
   buggy.left_motor.setAngularSpeed(5);
   buggy.right_motor.setAngularSpeed(-5);
   delay(1650);
   turnaround = 0;
+  buggy.left_motor.stop_();
+  buggy.right_motor.stop_();
 }
 
 void stopRunning()
@@ -71,7 +75,7 @@ void watchDistance()
   float w_desired;
   if (sonarDist > 0) //to cancel out error where no value is returned
   {
-    float errorDistance = sonarDist - 10; //steady state of 15cm (5 cm from sonar to wheel axel line/centre of rotation)
+    float errorDistance = sonarDist - 12; //steady state of 15cm (5 cm from sonar to wheel axel line/centre of rotation), 2 cm extra for margin of error
     //Proportional-only ontroller as uncertainty from suddenly changing error values can cause serious issues
     w_desired = ((errorDistance * kp_dist)/dt)/0.05;
     
