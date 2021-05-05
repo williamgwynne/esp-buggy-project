@@ -47,10 +47,29 @@ void stopRunning()
   delay(dt_millis);
   buggy.left_motor.stop_();
   buggy.right_motor.stop_();
-  while (true)
+  int tol = 0;
+  int flag_lineSensor = 0;
+  uint32_t sensorVals[7];
+  while (tol<1000)
   {
-    //infinite loop
+    flag_lineSensor = 0;
+    buggy.lineSensor.ReadSensor();
+    for (int i = 0; i < 7; i++)
+      {
+        sensorVals[i] = buggy.lineSensor.GetSensorValues(i);
+        if (sensorVals[i]<1700)
+          flag_lineSensor = 1;
+      }
+    if (flag_lineSensor)
+      tol+=dt_millis;
+    else
+      tol=0;
+    delay(dt_millis);
   }
+  updateMotorSpeeds.attach_ms(dt_millis, &adjustSpeeds); //returns to original code if put back on line
+  sendPulses.attach_ms(dt_millis, &getSonarDist); //only uncommmented so LED didn't annoy me
+  lineFollow.attach_ms(dt_millis, &followLine);
+  buggy.stop_ = 0;
 }
 
 void setup()

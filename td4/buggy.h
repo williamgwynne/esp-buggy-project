@@ -135,8 +135,8 @@ public:
       {
         sensorVals[i] = lineSensor.GetSensorValues(i);
         lineSensor_bool[i] = -(float)sensorVals[i] / 2500.0;
-        Serial.println(sensorVals[i]);
-        if (sensorVals[i]<1600)
+        //Serial.println(sensorVals[i]);
+        if (sensorVals[i]<1700)
           flag_lineSensor = 1;   
       }
     
