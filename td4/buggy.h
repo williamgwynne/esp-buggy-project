@@ -76,6 +76,8 @@ public:
   void stop_()
   {
     MotorWrite(0);
+    errorSpeed_prev = 0;
+    errorSpeed_sum = 0;
   }
 };
 
