@@ -95,7 +95,7 @@ void watchDistance()
     errorDistance_prev = errorDistance;
   }
   else
-    w_desired = 9;
+    w_desired = 8;
   buggy.w_desired = w_desired;
 }
 
